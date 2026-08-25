@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, Switch, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
@@ -57,7 +57,11 @@ export default function MapHome({ userId }: { userId: string }) {
       });
   }, [selected, pinsVersion]);
 
-  // live updates: anyone's check-in/leave/visibility change bumps pinsVersion
+  // live updates: anyone's check-in/leave/visibility change bumps pinsVersion.
+  // postgres_changes alone is not enough: RLS drops UPDATE events whose new row
+  // is no longer visible to the subscriber (turning discoverable OFF), so every
+  // mutation also sends a data-free "refetch" broadcast on the same channel.
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   useEffect(() => {
     const channel = supabase
       .channel('pins-changes')
@@ -66,11 +70,18 @@ export default function MapHome({ userId }: { userId: string }) {
         { event: '*', schema: 'public', table: 'pins' },
         () => setPinsVersion((v) => v + 1)
       )
+      .on('broadcast', { event: 'pins' }, () => setPinsVersion((v) => v + 1))
       .subscribe();
+    channelRef.current = channel;
     return () => {
+      channelRef.current = null;
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const notifyPresenceChanged = () => {
+    channelRef.current?.send({ type: 'broadcast', event: 'pins' });
+  };
 
   const pinnedVenue = pin ? venues.find((v) => v.id === pin.venue_id) : null;
 
@@ -85,6 +96,7 @@ export default function MapHome({ userId }: { userId: string }) {
       setError(err.message);
       return;
     }
+    notifyPresenceChanged();
     setPin({ user_id: userId, venue_id: venue.id, status: 'heading', discoverable: false });
   };
 
@@ -101,6 +113,7 @@ export default function MapHome({ userId }: { userId: string }) {
       setError(err.message);
       return;
     }
+    notifyPresenceChanged();
     setPin({ ...pin, status: 'arrived' });
   };
 
@@ -113,6 +126,7 @@ export default function MapHome({ userId }: { userId: string }) {
       setError(err.message);
       return;
     }
+    notifyPresenceChanged();
     setPin(null);
     setPeopleVenue(null);
   };
@@ -128,6 +142,7 @@ export default function MapHome({ userId }: { userId: string }) {
       setError(err.message);
       return;
     }
+    notifyPresenceChanged();
     setPin({ ...pin, discoverable: value });
   };
 
