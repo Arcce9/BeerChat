@@ -1,5 +1,13 @@
 # Design Requirements — BeerChat (working name)
 
+## FINAL DESIGN (Claude Design canvas, 2026-08-25) — treat as the source of truth for look & feel
+Canvas: https://claude.ai/design/p/e3bf91f9-fe70-499f-b95e-f40d9f2e1463 (7 screens)
+
+**Tokens:** bg #0B0B0D · surface #17181B · elevated #1F2126 · borders #26282D/#2A2C32 · accent #F2A93B (on-accent text #0B0B0D) · text #FFF, secondary rgba(255,255,255,.5), tertiary .35 · font Inter/system, headings bold with tight letter-spacing · buttons 56px, radius 16 · chips pill (999), 44px min height · cards radius 20 · bottom sheet radius 28 top, drag handle
+**Key patterns:** map pins = labeled pills with people counts; bottom status card "Heading to X · Hidden until you check in · Change"; venue sheet = name + meta + two stat cards (heading there / here now) + discoverable toggle + CTA (heading → "I'm here"); people cards = first name + "here 20 min" + interest tags + "Open to meet?" → "Waiting on {name}…"; match screen = initials blocks + shared tags; chat = amber own-bubbles, ephemeral note in header, quick-reply chips.
+**Adopted product decision:** discoverable is per check-in (on the pin), not a global profile flag.
+**Deviations (deliberate):** password auth instead of email codes (no email infra in prototype); 4-tab bar deferred until Chats exists; map search omitted in v1.
+
 Brief for designing the app screens in Claude Design. One artboard per screen, iPhone size (393 × 852).
 
 ## What the app is (one line for the designer)
