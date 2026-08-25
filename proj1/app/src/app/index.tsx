@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import MapHome from '@/components/MapHome';
 
 const INTERESTS = [
   'live music',
@@ -64,7 +65,7 @@ export default function Index() {
     return <ProfileSetupScreen userId={session.user.id} onSaved={setProfile} />;
   }
 
-  return <HomeScreen displayName={profile.display_name} />;
+  return <MapHome userId={session.user.id} />;
 }
 
 function SignInScreen() {
@@ -195,20 +196,6 @@ function ProfileSetupScreen({
         {error ? <Text style={styles.error}>{error}</Text> : null}
         <Pressable style={styles.button} onPress={save} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? '...' : 'Continue'}</Text>
-        </Pressable>
-      </SafeAreaView>
-    </View>
-  );
-}
-
-function HomeScreen({ displayName }: { displayName: string }) {
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.title}>BeerChat</Text>
-        <Text style={styles.subtitle}>hi, {displayName}</Text>
-        <Pressable onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.link}>Sign out</Text>
         </Pressable>
       </SafeAreaView>
     </View>
