@@ -1,6 +1,6 @@
 # Development Plan
 
-**Status:** ✅ Step 0 (2026-08-25) · ✅ Step 1 (2026-08-25) · next: Step 2 — venues & pins
+**Status:** ✅ Step 0 (2026-08-25) · ✅ Step 1 (2026-08-25) · ✅ Step 2 (2026-08-25) · next: Step 3 — presence
 
 Each step ends with a **test you can see with your own eyes**. We don't move on until the test passes.
 External services are wired at clearly marked moments. Budget: $0 except OpenAI API.
