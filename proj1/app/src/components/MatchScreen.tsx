@@ -23,12 +23,12 @@ export default function MatchScreen({
       <Text style={styles.label}>YOU BOTH SAID YES</Text>
 
       <View style={styles.squaresRow}>
-        <View style={[styles.square, { backgroundColor: colors.accent }]}>
-          <Text style={[styles.squareText, { color: colors.onAccent }]}>{myName.charAt(0).toUpperCase()}</Text>
+        <View style={[styles.square, styles.mySquare]}>
+          <Text style={styles.mySquareText}>{myName.charAt(0).toUpperCase()}</Text>
         </View>
         <Text style={styles.plus}>+</Text>
-        <View style={[styles.square, { backgroundColor: colors.borderStrong }]}>
-          <Text style={[styles.squareText, { color: colors.text }]}>{theirName.charAt(0).toUpperCase()}</Text>
+        <View style={[styles.square, styles.theirSquare]}>
+          <Text style={styles.theirSquareText}>{theirName.charAt(0).toUpperCase()}</Text>
         </View>
       </View>
 
@@ -93,7 +93,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  squareText: {
+  mySquare: {
+    backgroundColor: colors.accent,
+  },
+  mySquareText: {
+    color: colors.onAccent,
+    fontSize: 32,
+    fontWeight: 'bold',
+  },
+  theirSquare: {
+    backgroundColor: colors.borderStrong,
+  },
+  theirSquareText: {
+    color: colors.text,
     fontSize: 32,
     fontWeight: 'bold',
   },
