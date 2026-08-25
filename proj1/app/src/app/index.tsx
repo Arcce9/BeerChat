@@ -5,8 +5,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.title}>BeerChat 🍺</Text>
-        <Text style={styles.subtitle}>hello, night owls</Text>
+        <Text style={styles.title}>BeerChat</Text>
+        <Text style={styles.subtitle}>see you at the bar</Text>
       </SafeAreaView>
     </View>
   );
