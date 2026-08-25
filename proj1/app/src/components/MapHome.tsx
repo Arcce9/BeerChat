@@ -16,6 +16,7 @@ type Pin = {
 };
 type Counts = { heading: number; arrived: number };
 type Match = {
+  id: string;
   myName: string;
   myInterests: string[];
   theirName: string;
@@ -33,7 +34,12 @@ export default function MapHome({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
   const [pinsVersion, setPinsVersion] = useState(0);
   const [match, setMatch] = useState<Match | null>(null);
+  const matchRef = useRef<Match | null>(null);
   const venuesRef = useRef<Venue[]>([]);
+
+  useEffect(() => {
+    matchRef.current = match;
+  }, [match]);
 
   useEffect(() => {
     supabase
@@ -107,7 +113,7 @@ export default function MapHome({ userId }: { userId: string }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'matches' },
         async (payload) => {
-          const row = payload.new as { user_a: string; user_b: string; venue_id: string };
+          const row = payload.new as { id: string; user_a: string; user_b: string; venue_id: string };
           if (row.user_a !== userId && row.user_b !== userId) return;
           const otherId = row.user_a === userId ? row.user_b : row.user_a;
           const venue = venuesRef.current.find((v) => v.id === row.venue_id);
@@ -116,12 +122,23 @@ export default function MapHome({ userId }: { userId: string }) {
             supabase.from('profiles').select('display_name, interests').eq('id', otherId).maybeSingle(),
           ]);
           setMatch({
+            id: row.id,
             myName: me?.display_name ?? '',
             myInterests: me?.interests ?? [],
             theirName: them?.display_name ?? '',
             theirInterests: them?.interests ?? [],
             venueName: venue?.name ?? '',
           });
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'matches' },
+        (payload) => {
+          // withdrawal dissolves the match server-side; DELETE events carry only
+          // the old row's id and are not RLS-filtered, so close if it's ours
+          const old = payload.old as { id?: string };
+          if (old.id && matchRef.current?.id === old.id) setMatch(null);
         }
       )
       .subscribe();

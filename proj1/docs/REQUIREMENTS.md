@@ -15,6 +15,7 @@ Goal: portfolio prototype + demo for NEX2 application. Zero budget except OpenAI
 - **Privacy:** venue-level presence only. Never share exact GPS coordinates with other users.
 - **Opt-in visibility:** a user is invisible at a venue until they explicitly check in as discoverable.
 - **Double opt-in:** no identity reveal and no chat until both users confirm.
+- **Consent is ongoing:** withdrawing your "open to meet" dissolves the match for both people, live (added 2026-08-25 from testing).
 - **Chat is ephemeral:** conversations expire a few hours after the meetup (exact TTL: TBD).
 - **Minimal profile:** no bios/feeds/followers. This is not a social network, it's a meetup tool.
 
