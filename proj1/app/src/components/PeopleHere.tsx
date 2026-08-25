@@ -48,12 +48,6 @@ export default function PeopleHere({
   const toggleRequest = async (targetId: string) => {
     setActionError('');
     const alreadyRequested = requested.has(targetId);
-    setRequested((prev) => {
-      const next = new Set(prev);
-      if (alreadyRequested) next.delete(targetId);
-      else next.add(targetId);
-      return next;
-    });
     const { error: err } = alreadyRequested
       ? await supabase
           .from('meet_requests')
@@ -65,13 +59,14 @@ export default function PeopleHere({
           .insert({ requester_id: userId, target_id: targetId, venue_id: venueId });
     if (err) {
       setActionError(err.message);
-      setRequested((prev) => {
-        const next = new Set(prev);
-        if (alreadyRequested) next.add(targetId);
-        else next.delete(targetId);
-        return next;
-      });
+      return;
     }
+    setRequested((prev) => {
+      const next = new Set(prev);
+      if (alreadyRequested) next.delete(targetId);
+      else next.add(targetId);
+      return next;
+    });
   };
 
   return (
@@ -107,7 +102,7 @@ export default function PeopleHere({
                   ))}
                 </View>
                 <Pressable
-                  style={isRequested ? styles.waitingButton : styles.meetButton}
+                  style={[styles.requestButton, isRequested ? styles.waitingVariant : styles.meetVariant]}
                   onPress={() => toggleRequest(person.user_id)}
                 >
                   <Text style={isRequested ? styles.waitingButtonText : styles.meetButtonText}>
@@ -211,26 +206,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  meetButton: {
-    backgroundColor: '#24262C',
+  requestButton: {
     borderRadius: 14,
     minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  meetVariant: {
+    backgroundColor: '#24262C',
+  },
+  waitingVariant: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.accent,
   },
   meetButtonText: {
     color: colors.text,
     fontSize: 14,
     fontWeight: '700',
-  },
-  waitingButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: colors.accent,
-    borderRadius: 14,
-    minHeight: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   waitingButtonText: {
     color: colors.accent,

@@ -34,12 +34,6 @@ export default function MapHome({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
   const [pinsVersion, setPinsVersion] = useState(0);
   const [match, setMatch] = useState<Match | null>(null);
-  const matchRef = useRef<Match | null>(null);
-  const venuesRef = useRef<Venue[]>([]);
-
-  useEffect(() => {
-    matchRef.current = match;
-  }, [match]);
 
   useEffect(() => {
     supabase
@@ -47,10 +41,6 @@ export default function MapHome({ userId }: { userId: string }) {
       .select('id, name, lat, lng')
       .then(({ data }) => setVenues(data ?? []));
   }, []);
-
-  useEffect(() => {
-    venuesRef.current = venues;
-  }, [venues]);
 
   // own pin — refetched on mount and whenever any pin changes (own or others')
   useEffect(() => {
@@ -116,7 +106,7 @@ export default function MapHome({ userId }: { userId: string }) {
           const row = payload.new as { id: string; user_a: string; user_b: string; venue_id: string };
           if (row.user_a !== userId && row.user_b !== userId) return;
           const otherId = row.user_a === userId ? row.user_b : row.user_a;
-          const venue = venuesRef.current.find((v) => v.id === row.venue_id);
+          const venue = venues.find((v) => v.id === row.venue_id);
           const [{ data: me }, { data: them }] = await Promise.all([
             supabase.from('profiles').select('display_name, interests').eq('id', userId).maybeSingle(),
             supabase.from('profiles').select('display_name, interests').eq('id', otherId).maybeSingle(),
@@ -138,14 +128,14 @@ export default function MapHome({ userId }: { userId: string }) {
           // withdrawal dissolves the match server-side; DELETE events carry only
           // the old row's id and are not RLS-filtered, so close if it's ours
           const old = payload.old as { id?: string };
-          if (old.id && matchRef.current?.id === old.id) setMatch(null);
+          if (old.id) setMatch((m) => (m?.id === old.id ? null : m));
         }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, venues]);
 
   const pinnedVenue = pin ? venues.find((v) => v.id === pin.venue_id) : null;
 
@@ -273,11 +263,11 @@ export default function MapHome({ userId }: { userId: string }) {
 
           <View style={styles.statsRow}>
             <View style={styles.statCard}>
-              <Text style={styles.statNumberAmber}>{counts.heading}</Text>
+              <Text style={[styles.statNumber, { color: colors.accent }]}>{counts.heading}</Text>
               <Text style={styles.statLabel}>heading there</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statNumberWhite}>{counts.arrived}</Text>
+              <Text style={[styles.statNumber, { color: colors.text }]}>{counts.arrived}</Text>
               <Text style={styles.statLabel}>here now</Text>
             </View>
           </View>
@@ -471,13 +461,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  statNumberAmber: {
-    color: colors.accent,
-    fontSize: 32,
-    fontWeight: 'bold',
-  },
-  statNumberWhite: {
-    color: colors.text,
+  statNumber: {
     fontSize: 32,
     fontWeight: 'bold',
   },
