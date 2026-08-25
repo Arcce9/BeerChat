@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 import PeopleHere from '@/components/PeopleHere';
 import MatchScreen from '@/components/MatchScreen';
+import ChatScreen from '@/components/ChatScreen';
 
 type Venue = { id: string; name: string; lat: number; lng: number };
 type Pin = {
@@ -15,6 +16,7 @@ type Pin = {
   discoverable: boolean;
 };
 type Counts = { heading: number; arrived: number };
+type MatchRow = { id: string; user_a: string; user_b: string; venue_id: string; created_at: string };
 type Match = {
   id: string;
   myName: string;
@@ -22,6 +24,7 @@ type Match = {
   theirName: string;
   theirInterests: string[];
   venueName: string;
+  createdAt: string;
 };
 
 export default function MapHome({ userId }: { userId: string }) {
@@ -34,6 +37,8 @@ export default function MapHome({ userId }: { userId: string }) {
   const [loading, setLoading] = useState(false);
   const [pinsVersion, setPinsVersion] = useState(0);
   const [match, setMatch] = useState<Match | null>(null);
+  const [showMatchScreen, setShowMatchScreen] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const matchRef = useRef<Match | null>(null);
   const venuesRef = useRef<Venue[]>([]);
 
@@ -103,6 +108,41 @@ export default function MapHome({ userId }: { userId: string }) {
     channelRef.current?.send({ type: 'broadcast', event: 'pins' });
   };
 
+  // shared enrichment for a raw matches row: fetch both profiles + resolve venue name
+  const buildMatch = async (row: MatchRow): Promise<Match> => {
+    const otherId = row.user_a === userId ? row.user_b : row.user_a;
+    const venue = venuesRef.current.find((v) => v.id === row.venue_id);
+    const [{ data: me }, { data: them }] = await Promise.all([
+      supabase.from('profiles').select('display_name, interests').eq('id', userId).maybeSingle(),
+      supabase.from('profiles').select('display_name, interests').eq('id', otherId).maybeSingle(),
+    ]);
+    return {
+      id: row.id,
+      myName: me?.display_name ?? '',
+      myInterests: me?.interests ?? [],
+      theirName: them?.display_name ?? '',
+      theirInterests: them?.interests ?? [],
+      venueName: venue?.name ?? '',
+      createdAt: row.created_at,
+    };
+  };
+
+  // restore an existing match on mount (e.g. app relaunch) without showing the match screen
+  useEffect(() => {
+    supabase
+      .from('matches')
+      .select('id, user_a, user_b, venue_id, created_at')
+      .or(`user_a.eq.${userId},user_b.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(async ({ data }) => {
+        if (!data) return;
+        setMatch(await buildMatch(data as MatchRow));
+        setShowMatchScreen(false);
+      });
+  }, [userId]);
+
   // matches: a DB trigger inserts a row once both sides of meet_requests exist.
   // RLS lets both participants select the row, so realtime delivers the INSERT
   // to both of us without any extra broadcast.
@@ -113,22 +153,11 @@ export default function MapHome({ userId }: { userId: string }) {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'matches' },
         async (payload) => {
-          const row = payload.new as { id: string; user_a: string; user_b: string; venue_id: string };
+          const row = payload.new as MatchRow;
           if (row.user_a !== userId && row.user_b !== userId) return;
-          const otherId = row.user_a === userId ? row.user_b : row.user_a;
-          const venue = venuesRef.current.find((v) => v.id === row.venue_id);
-          const [{ data: me }, { data: them }] = await Promise.all([
-            supabase.from('profiles').select('display_name, interests').eq('id', userId).maybeSingle(),
-            supabase.from('profiles').select('display_name, interests').eq('id', otherId).maybeSingle(),
-          ]);
-          setMatch({
-            id: row.id,
-            myName: me?.display_name ?? '',
-            myInterests: me?.interests ?? [],
-            theirName: them?.display_name ?? '',
-            theirInterests: them?.interests ?? [],
-            venueName: venue?.name ?? '',
-          });
+          setMatch(await buildMatch(row));
+          setShowMatchScreen(true);
+          setShowChat(false);
         }
       )
       .on(
@@ -138,7 +167,11 @@ export default function MapHome({ userId }: { userId: string }) {
           // withdrawal dissolves the match server-side; DELETE events carry only
           // the old row's id and are not RLS-filtered, so close if it's ours
           const old = payload.old as { id?: string };
-          if (old.id && matchRef.current?.id === old.id) setMatch(null);
+          if (old.id && matchRef.current?.id === old.id) {
+            setMatch(null);
+            setShowMatchScreen(false);
+            setShowChat(false);
+          }
         }
       )
       .subscribe();
@@ -358,7 +391,33 @@ export default function MapHome({ userId }: { userId: string }) {
         />
       )}
 
-      {match && <MatchScreen {...match} onDismiss={() => setMatch(null)} />}
+      {match && !showMatchScreen && !showChat && !selected && !peopleVenue && (
+        <Pressable style={styles.chatPill} onPress={() => setShowChat(true)}>
+          <Text style={styles.chatPillText}>Chat with {match.theirName}</Text>
+        </Pressable>
+      )}
+
+      {match && showMatchScreen && (
+        <MatchScreen
+          {...match}
+          onSayHi={() => {
+            setShowMatchScreen(false);
+            setShowChat(true);
+          }}
+          onDismiss={() => setShowMatchScreen(false)}
+        />
+      )}
+
+      {match && showChat && (
+        <ChatScreen
+          matchId={match.id}
+          myId={userId}
+          theirName={match.theirName}
+          venueName={match.venueName}
+          matchCreatedAt={match.createdAt}
+          onClose={() => setShowChat(false)}
+        />
+      )}
     </View>
   );
 }
@@ -563,5 +622,21 @@ const styles = StyleSheet.create({
   error: {
     color: colors.danger,
     fontSize: 13,
+  },
+  chatPill: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 110,
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatPillText: {
+    color: colors.onAccent,
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

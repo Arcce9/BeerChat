@@ -7,6 +7,7 @@ export default function MatchScreen({
   theirName,
   theirInterests,
   venueName,
+  onSayHi,
   onDismiss,
 }: {
   myName: string;
@@ -14,6 +15,7 @@ export default function MatchScreen({
   theirName: string;
   theirInterests: string[];
   venueName: string;
+  onSayHi: () => void;
   onDismiss: () => void;
 }) {
   const shared = myInterests.filter((i) => theirInterests.includes(i));
@@ -48,10 +50,9 @@ export default function MatchScreen({
       )}
 
       <View style={styles.bottom}>
-        <Pressable style={styles.sayHiButton} onPress={onDismiss}>
+        <Pressable style={styles.sayHiButton} onPress={onSayHi}>
           <Text style={styles.sayHiText}>Say hi</Text>
         </Pressable>
-        <Text style={styles.note}>Chat opens in the next step.</Text>
         <Pressable onPress={onDismiss}>
           <Text style={styles.closeText}>close</Text>
         </Pressable>
@@ -163,11 +164,6 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  note: {
-    color: colors.textTertiary,
-    fontSize: 12,
-    textAlign: 'center',
   },
   closeText: {
     color: colors.textSecondary,
