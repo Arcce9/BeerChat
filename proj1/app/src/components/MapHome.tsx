@@ -5,6 +5,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 import PeopleHere from '@/components/PeopleHere';
+import MatchScreen from '@/components/MatchScreen';
 
 type Venue = { id: string; name: string; lat: number; lng: number };
 type Pin = {
@@ -14,6 +15,13 @@ type Pin = {
   discoverable: boolean;
 };
 type Counts = { heading: number; arrived: number };
+type Match = {
+  myName: string;
+  myInterests: string[];
+  theirName: string;
+  theirInterests: string[];
+  venueName: string;
+};
 
 export default function MapHome({ userId }: { userId: string }) {
   const [venues, setVenues] = useState<Venue[]>([]);
@@ -24,6 +32,8 @@ export default function MapHome({ userId }: { userId: string }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pinsVersion, setPinsVersion] = useState(0);
+  const [match, setMatch] = useState<Match | null>(null);
+  const venuesRef = useRef<Venue[]>([]);
 
   useEffect(() => {
     supabase
@@ -31,6 +41,10 @@ export default function MapHome({ userId }: { userId: string }) {
       .select('id, name, lat, lng')
       .then(({ data }) => setVenues(data ?? []));
   }, []);
+
+  useEffect(() => {
+    venuesRef.current = venues;
+  }, [venues]);
 
   // own pin — refetched on mount and whenever any pin changes (own or others')
   useEffect(() => {
@@ -82,6 +96,39 @@ export default function MapHome({ userId }: { userId: string }) {
   const notifyPresenceChanged = () => {
     channelRef.current?.send({ type: 'broadcast', event: 'pins' });
   };
+
+  // matches: a DB trigger inserts a row once both sides of meet_requests exist.
+  // RLS lets both participants select the row, so realtime delivers the INSERT
+  // to both of us without any extra broadcast.
+  useEffect(() => {
+    const channel = supabase
+      .channel('matches-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'matches' },
+        async (payload) => {
+          const row = payload.new as { user_a: string; user_b: string; venue_id: string };
+          if (row.user_a !== userId && row.user_b !== userId) return;
+          const otherId = row.user_a === userId ? row.user_b : row.user_a;
+          const venue = venuesRef.current.find((v) => v.id === row.venue_id);
+          const [{ data: me }, { data: them }] = await Promise.all([
+            supabase.from('profiles').select('display_name, interests').eq('id', userId).maybeSingle(),
+            supabase.from('profiles').select('display_name, interests').eq('id', otherId).maybeSingle(),
+          ]);
+          setMatch({
+            myName: me?.display_name ?? '',
+            myInterests: me?.interests ?? [],
+            theirName: them?.display_name ?? '',
+            theirInterests: them?.interests ?? [],
+            venueName: venue?.name ?? '',
+          });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const pinnedVenue = pin ? venues.find((v) => v.id === pin.venue_id) : null;
 
@@ -293,6 +340,8 @@ export default function MapHome({ userId }: { userId: string }) {
           onClose={() => setPeopleVenue(null)}
         />
       )}
+
+      {match && <MatchScreen {...match} onDismiss={() => setMatch(null)} />}
     </View>
   );
 }

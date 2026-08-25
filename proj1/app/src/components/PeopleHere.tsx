@@ -24,6 +24,8 @@ export default function PeopleHere({
   onClose: () => void;
 }) {
   const [people, setPeople] = useState<Person[]>([]);
+  const [requested, setRequested] = useState<Set<string>>(new Set());
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     supabase
@@ -34,6 +36,43 @@ export default function PeopleHere({
       .neq('user_id', userId)
       .then(({ data }) => setPeople((data as unknown as Person[]) ?? []));
   }, [venueId, userId, refreshKey]);
+
+  useEffect(() => {
+    supabase
+      .from('meet_requests')
+      .select('target_id')
+      .eq('requester_id', userId)
+      .then(({ data }) => setRequested(new Set((data ?? []).map((r) => r.target_id))));
+  }, [userId, refreshKey]);
+
+  const toggleRequest = async (targetId: string) => {
+    setActionError('');
+    const alreadyRequested = requested.has(targetId);
+    setRequested((prev) => {
+      const next = new Set(prev);
+      if (alreadyRequested) next.delete(targetId);
+      else next.add(targetId);
+      return next;
+    });
+    const { error: err } = alreadyRequested
+      ? await supabase
+          .from('meet_requests')
+          .delete()
+          .eq('requester_id', userId)
+          .eq('target_id', targetId)
+      : await supabase
+          .from('meet_requests')
+          .insert({ requester_id: userId, target_id: targetId, venue_id: venueId });
+    if (err) {
+      setActionError(err.message);
+      setRequested((prev) => {
+        const next = new Set(prev);
+        if (alreadyRequested) next.add(targetId);
+        else next.delete(targetId);
+        return next;
+      });
+    }
+  };
 
   return (
     <View style={styles.overlay}>
@@ -47,24 +86,37 @@ export default function PeopleHere({
         <Text style={styles.subline}>
           Nobody sees you tapped anything unless they tap too.
         </Text>
+        {actionError ? <Text style={styles.error}>{actionError}</Text> : null}
         <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-          {people.map((person) => (
-            <View key={person.user_id} style={styles.card}>
-              <View style={styles.cardTopRow}>
-                <Text style={styles.name}>{person.profiles?.display_name ?? 'Someone'}</Text>
-                <Text style={styles.statusLabel}>
-                  {person.status === 'arrived' ? 'here' : 'heading over'}
-                </Text>
+          {people.map((person) => {
+            const name = person.profiles?.display_name ?? 'Someone';
+            const isRequested = requested.has(person.user_id);
+            return (
+              <View key={person.user_id} style={styles.card}>
+                <View style={styles.cardTopRow}>
+                  <Text style={styles.name}>{name}</Text>
+                  <Text style={styles.statusLabel}>
+                    {person.status === 'arrived' ? 'here' : 'heading over'}
+                  </Text>
+                </View>
+                <View style={styles.tagRow}>
+                  {(person.profiles?.interests ?? []).map((tag) => (
+                    <View key={tag} style={styles.tag}>
+                      <Text style={styles.tagText}>{tag}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Pressable
+                  style={isRequested ? styles.waitingButton : styles.meetButton}
+                  onPress={() => toggleRequest(person.user_id)}
+                >
+                  <Text style={isRequested ? styles.waitingButtonText : styles.meetButtonText}>
+                    {isRequested ? `Waiting on ${name}…` : 'Open to meet?'}
+                  </Text>
+                </Pressable>
               </View>
-              <View style={styles.tagRow}>
-                {(person.profiles?.interests ?? []).map((tag) => (
-                  <View key={tag} style={styles.tag}>
-                    <Text style={styles.tagText}>{tag}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -158,5 +210,36 @@ const styles = StyleSheet.create({
     color: colors.accent,
     fontSize: 12,
     fontWeight: '600',
+  },
+  meetButton: {
+    backgroundColor: '#24262C',
+    borderRadius: 14,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  meetButtonText: {
+    color: colors.text,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  waitingButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.accent,
+    borderRadius: 14,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  waitingButtonText: {
+    color: colors.accent,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  error: {
+    color: colors.danger,
+    fontSize: 13,
+    marginTop: 8,
   },
 });
