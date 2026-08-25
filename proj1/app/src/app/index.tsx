@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { colors } from '@/lib/theme';
 import MapHome from '@/components/MapHome';
 
 const INTERESTS = [
@@ -87,26 +88,36 @@ function SignInScreen() {
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.title}>BeerChat</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="email"
-          placeholderTextColor="#888"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="password"
-          placeholderTextColor="#888"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+      <SafeAreaView style={styles.formSafeArea}>
+        <Text style={styles.headline}>Good company{'\n'}is already here.</Text>
+        <Text style={styles.subline}>
+          Pin the bar you're heading to and see who's up for saying hello.
+        </Text>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={[styles.input, email && styles.inputFilled]}
+            placeholderTextColor={colors.textTertiary}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            value={email}
+            onChangeText={setEmail}
+          />
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={[styles.input, password && styles.inputFilled]}
+            placeholderTextColor={colors.textTertiary}
+            secureTextEntry
+            value={password}
+            onChangeText={setPassword}
+          />
+        </View>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
         <Pressable style={styles.button} onPress={submit} disabled={loading}>
           <Text style={styles.buttonText}>
             {loading ? '...' : isSignUp ? 'Create account' : 'Sign in'}
@@ -147,7 +158,7 @@ function ProfileSetupScreen({
   const save = async () => {
     setError('');
     if (!displayName.trim()) {
-      setError('enter a display name');
+      setError('enter a first name');
       return;
     }
     if (interests.length < 1) {
@@ -168,15 +179,26 @@ function ProfileSetupScreen({
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <Text style={styles.title}>Set up profile</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="display name"
-          placeholderTextColor="#888"
-          value={displayName}
-          onChangeText={setDisplayName}
-        />
+      <SafeAreaView style={styles.formSafeArea}>
+        <Text style={styles.headline}>Who are you tonight?</Text>
+        <Text style={styles.subline}>
+          Only your first name is ever shown to other people.
+        </Text>
+
+        <View style={styles.field}>
+          <Text style={styles.label}>First name</Text>
+          <TextInput
+            style={[styles.input, displayName && styles.inputFilled]}
+            placeholderTextColor={colors.textTertiary}
+            value={displayName}
+            onChangeText={setDisplayName}
+          />
+        </View>
+
+        <View style={styles.interestsHeader}>
+          <Text style={styles.sectionTitle}>Pick 3–5 interests</Text>
+          <Text style={styles.counter}>{interests.length} of 5 selected</Text>
+        </View>
         <View style={styles.chipWrap}>
           {INTERESTS.map((interest) => {
             const selected = interests.includes(interest);
@@ -193,9 +215,14 @@ function ProfileSetupScreen({
             );
           })}
         </View>
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <Text style={styles.footerNote}>
+          You're invisible until you check in and choose to be seen.
+        </Text>
         <Pressable style={styles.button} onPress={save} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? '...' : 'Continue'}</Text>
+          <Text style={styles.buttonText}>{loading ? '...' : 'Done'}</Text>
         </Pressable>
       </SafeAreaView>
     </View>
@@ -205,79 +232,119 @@ function ProfileSetupScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
+    backgroundColor: colors.bg,
   },
-  safeArea: {
+  formSafeArea: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
+    gap: 14,
     paddingHorizontal: 24,
   },
-  title: {
-    fontSize: 36,
+  headline: {
+    fontSize: 40,
+    lineHeight: 44,
     fontWeight: 'bold',
-    color: '#F2A93B',
+    letterSpacing: -1,
+    color: colors.text,
   },
-  subtitle: {
+  subline: {
     fontSize: 16,
-    color: '#FFFFFF',
+    lineHeight: 22,
+    color: colors.textSecondary,
+    marginBottom: 8,
+  },
+  field: {
+    gap: 6,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   input: {
-    width: '100%',
-    backgroundColor: '#1E1E1E',
-    color: '#FFFFFF',
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
     paddingHorizontal: 16,
-    paddingVertical: 12,
     fontSize: 16,
   },
+  inputFilled: {
+    borderColor: colors.accent,
+  },
   button: {
-    width: '100%',
-    backgroundColor: '#F2A93B',
-    borderRadius: 12,
-    paddingVertical: 14,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.accent,
     alignItems: 'center',
-    marginTop: 4,
+    justifyContent: 'center',
+    marginTop: 6,
   },
   buttonText: {
-    color: '#121212',
+    color: colors.onAccent,
     fontSize: 16,
     fontWeight: 'bold',
   },
   link: {
-    color: '#AAAAAA',
+    color: colors.textSecondary,
     fontSize: 14,
-    marginTop: 8,
+    marginTop: 10,
+    textAlign: 'center',
   },
   error: {
-    color: '#FF6B6B',
+    color: colors.danger,
     fontSize: 14,
     textAlign: 'center',
+  },
+  interestsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  counter: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.accent,
   },
   chipWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    justifyContent: 'center',
   },
   chip: {
+    minHeight: 44,
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: '#F2A93B',
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderColor: colors.borderStrong,
   },
   chipSelected: {
-    backgroundColor: '#F2A93B',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   chipText: {
-    color: '#F2A93B',
+    color: colors.chipText,
     fontSize: 14,
   },
   chipTextSelected: {
-    color: '#121212',
+    color: colors.onAccent,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  footerNote: {
+    color: colors.textTertiary,
+    fontSize: 13,
+    textAlign: 'center',
   },
 });
