@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## [2026-09-30] Matched person's name vanished after they left the venue (M1 packaging)
+- **Symptom:** Map pill showed "Chat with " (empty name) for an active match.
+- **Cause:** Profile visibility rode only on "owner has a discoverable pin" — once a matched person left/went hidden, their profile became unreadable to their own match.
+- **Fix:** New RLS policy: match participants can read each other's profile while the match lasts (migration 20260930000007).
+- **Lesson:** Every screen that shows another user needs an RLS path that covers it; visibility rules compose per-feature.
+
 ## [2026-08-25] Turning visibility OFF didn't update the other phone's list live (Step 3)
 - **Symptom:** Flipping "Let people here see me" ON appeared on the other device instantly; flipping it OFF only disappeared after closing and reopening the people list.
 - **Cause:** Supabase Realtime applies RLS per subscriber to `postgres_changes` UPDATE events. When discoverable flips OFF, the updated row is no longer visible to other users, so — correctly, by privacy rules — no event is delivered to them, and their list goes stale.
