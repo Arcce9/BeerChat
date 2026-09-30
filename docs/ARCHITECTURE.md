@@ -1,6 +1,6 @@
 # Architecture
 
-Milestone 0 version. This is the system context: what the pieces are and what talks to what. No internal design yet.
+Milestone 0 version, still accurate as system context at Milestone 1. As built in M1: the app talks to Supabase (Auth, Postgres+RLS, Realtime) only; the Socket.io presence server and the OpenAI embedding path are not yet wired (planned M2). Internal design now exists in [DESIGN-M1.md](DESIGN-M1.md).
 
 ## System context
 
@@ -54,8 +54,9 @@ The arrow between Postgres and OpenAI is a simplification. The embedding call ru
 
 Exact GPS never gets stored. The only location the backend ever sees is a venue id.
 
-## Still open
+## Still open (updated at Milestone 1)
 
 - Where the OpenAI call lives: a Supabase edge function or the Node server.
-- How long messages stick around before they expire.
+- How long messages stick around before they expire. (M1 behavior: messages are deleted when the match is withdrawn; a time-based expiry is still planned.)
 - Whether presence moves fully to Socket.io at Milestone 2 or stays split with Supabase Realtime.
+- Resolved in M1: matching runs entirely in Postgres triggers (see [adr/0002](adr/0002-db-trigger-matchmaker.md)); `discoverable` lives on the pin (per check-in), not the profile.

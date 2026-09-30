@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BeerChat — Project Milestone 1</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  @page { size: letter; margin: 22mm 18mm; }
+  * { box-sizing: border-box; }
+  body { font: 11pt/1.55 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; margin: 0; }
+  h1 { font-size: 24pt; letter-spacing: -0.5pt; margin: 0 0 4pt; }
+  h2 { font-size: 15pt; margin: 22pt 0 8pt; border-bottom: 2px solid #F2A93B; padding-bottom: 3pt; page-break-after: avoid; }
+  h3 { font-size: 12pt; margin: 14pt 0 5pt; page-break-after: avoid; }
+  p, li { margin: 4pt 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #ccc; padding: 4pt 7pt; text-align: left; vertical-align: top; }
+  th { background: #faf3e3; }
+  code, pre { font-family: ui-monospace, Menlo, monospace; font-size: 9pt; background: #f5f5f2; border-radius: 3px; }
+  code { padding: 1px 4px; }
+  pre { padding: 8pt 10pt; overflow-x: hidden; white-space: pre-wrap; page-break-inside: avoid; }
+  .cover { height: 88vh; display: flex; flex-direction: column; justify-content: center; }
+  .cover .beer { font-size: 40pt; }
+  .cover table { width: auto; margin-top: 18pt; font-size: 11pt; }
+  .cover td { border: none; padding: 3pt 14pt 3pt 0; }
+  .muted { color: #666; }
+  .figure { margin: 10pt 0; text-align: center; page-break-inside: avoid; }
+  .figure .cap { font-size: 9pt; color: #555; margin-top: 4pt; }
+  .mermaid { display: flex; justify-content: center; }
+  .shots { display: flex; gap: 8pt; justify-content: center; flex-wrap: wrap; }
+  .shots figure { margin: 0; width: 31%; text-align: center; page-break-inside: avoid; }
+  .shots img { width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+  .shots figcaption { font-size: 8.5pt; color: #555; margin-top: 2pt; }
+  .pb { page-break-before: always; }
+  a { color: #b07714; text-decoration: none; }
+  .callout { background: #faf3e3; border-left: 3px solid #F2A93B; padding: 6pt 10pt; margin: 8pt 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="beer">🍺</div>
+  <h1>BeerChat</h1>
+  <p style="font-size:13pt" class="muted">Real-time, venue-level social presence with double opt-in meetups</p>
+  <p style="font-size:14pt; margin-top:16pt"><b>CS 415/515 Software Engineering — Project Milestone 1 (Build It)</b></p>
+  <table>
+    <tr><td>Team</td><td>Arda Alici (aalici@crimson.ua.edu) · Margulan Baizhakyp (mbaizhakyp@crimson.ua.edu) · Karthik Gaur (kgaur@crimson.ua.edu)</td></tr>
+    <tr><td>Repository</td><td><a href="https://github.com/Arcce9/BeerChat">github.com/Arcce9/BeerChat</a></td></tr>
+    <tr><td>Git tag</td><td><code>milestone-1</code></td></tr>
+    <tr><td>Submitted</td><td>September 30, 2026</td></tr>
+  </table>
+</div>
+
+<!-- ============ 1. WORKING APP ============ -->
+<h2>1 · Working application &amp; repository</h2>
+<p><b>Repository:</b> <a href="https://github.com/Arcce9/BeerChat">https://github.com/Arcce9/BeerChat</a> — tag <code>milestone-1</code> is the exact submitted version. The app is not publicly deployed (it is a mobile app; distribution for grading is via local run in the iOS Simulator per the instructions in §6).</p>
+<p>Milestone 1 delivers the <b>complete working core loop, end to end, live between two devices</b>:</p>
+<p style="text-align:center; font-size:10.5pt"><code>sign up → set profile → pin a venue → check in → discover people → mutual "open to meet" → live ephemeral chat</code></p>
+<p>Every P0 backlog story (BC-01…BC-07) plus the BC-11 map-fallback is implemented and verified on two simulators side by side (§7). Authentication is real (Supabase Auth with persisted sessions), all privacy rules are enforced in the database with Row Level Security, and every live update (presence, matching, chat) is pushed over WebSockets — nothing is mocked and nothing polls.</p>
+
+<h3>Screenshots (running application)</h3>
+<div class="shots" id="shots">
+  <figure><img src="img/map-a.png" alt="map A"><figcaption>Device A (demo user): dark map with venue pins, BC-11 List fallback (top-left), status card "You're at Houndstooth Sports Bar · Visible to people here", active match pill "Chat with test2".</figcaption></figure>
+  <figure><img src="img/map-b.png" alt="map B"><figcaption>Device B (matched user), running side by side: same venue, its own live match pill "Chat with Margo".</figcaption></figure>
+</div>
+<p class="muted" style="font-size:9pt">Full seven-screen visual design (implemented 1:1 by the app): team design canvas, linked in <code>docs/DESIGN.md</code>.</p>
+
+<!-- ============ 2. PRODUCT BRIEF ============ -->
+<h2>2 · Updated product brief &amp; MVP scope</h2>
+<p><b>Problem.</b> People go out to bars and social venues surrounded by others they might genuinely like — and leave without meeting any of them. Existing apps optimize pre-planned events or remote swiping, not the people already in the room.</p>
+<p><b>Product.</b> BeerChat lets a user pin the venue they're heading to, check in on arrival, optionally become visible to others at that venue (first name + interests only), send a private "open to meet?", and — only when it's mutual — get a short-lived chat to find each other in person.</p>
+<p><b>Users.</b> Primary: students and young professionals going out alone or in small groups (personas in the Milestone 0 proposal). Secondary: venues that benefit from social traffic.</p>
+<table>
+<tr><th>In the MVP (shipped in M1)</th><th>Deliberately out (unchanged from M0)</th><th>Next (M2)</th></tr>
+<tr><td>Email/password accounts, first-name + interests profile, map with seeded venues + list fallback, one pin per user (heading/arrived), per-venue visibility opt-in, live "who's here", double opt-in matching, withdrawal dissolving matches live, realtime 1-on-1 chat that dies with the match</td>
+<td>Exact GPS sharing, bios/photos/followers, group chat, venue reviews, Android polish, push notifications</td>
+<td>Socket.io presence service, interest-embedding ranking (OpenAI + pgvector), time-based chat expiry, automated tests + CI</td></tr>
+</table>
+<p><b>Scope change log (agile, small magnitude):</b> (1) <i>discoverable</i> moved from profile to check-in — visibility is now per-venue-per-night, which matches the privacy story better; (2) added rule "consent is ongoing": withdrawing interest dissolves an existing match and its messages for both people — adopted after two-device testing; (3) BC-11 venue-list fallback implemented as planned in M0's risk note.</p>
+
+<!-- ============ 3. PROCESS ============ -->
+<h2>3 · Software process model &amp; Definition of Done</h2>
+<p>We use <b>incremental development with feature-gated steps</b> — a lightweight Scrum variant. The product is divided into steps (accounts → venues → presence → matching → chat), each gated by an <b>observable two-device acceptance test</b> rather than a timebox; the app is runnable after every step, which directly satisfies the course's agile delivery requirement. We chose behavior gates over timeboxed sprints because the team works in irregular sessions around class schedules; the gate keeps every merge shippable regardless of when work happens. AI-assisted development (Claude Code as orchestrating pair-programmer) was used throughout, with every change reviewed, tested on-device, and committed by a team member — this also prepares the disclosed AI-workflow deliverable of Milestone 3.</p>
+<div class="callout"><b>Definition of Done</b> — a backlog item is done when: (1) TypeScript compiles clean (<code>npx tsc --noEmit</code>); (2) the item's acceptance test passes in the two-simulator run; (3) its privacy rules are enforced by Row Level Security in the database, not only by UI; (4) it is committed with a step-referencing message, and any bug found on the way has a symptom/cause/fix entry in <code>docs/BUGLOG.md</code>.</div>
+
+<!-- ============ 4. REQUIREMENTS ============ -->
+<h2 class="pb">4 · Requirements: prioritized backlog &amp; use cases</h2>
+<p>Full backlog with points and engineering tasks: <code>docs/BACKLOG.md</code>. All P0 stories are done and verified; statuses below are as of this submission.</p>
+<table>
+<tr><th>ID</th><th>User story (condensed)</th><th>Pri</th><th>Status</th></tr>
+<tr><td>BC-01</td><td>Sign up / log in with email + password; my data belongs to me</td><td>P0</td><td><b>Done</b> — verified §7.1–2</td></tr>
+<tr><td>BC-02</td><td>First name + 3–5 interests on my profile</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-03</td><td>See venues on a map and pick where I'm going</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-04</td><td>Check in so others know I'm open to meeting (explicit opt-in)</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-05</td><td>See who else is checked in at my venue, live</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-06</td><td>Connections require both people to agree (one-sided interest invisible)</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-07</td><td>Live 1-on-1 chat with my match</td><td>P0</td><td><b>Done</b></td></tr>
+<tr><td>BC-11</td><td>Plain venue list fallback if the map won't load</td><td>P1</td><td><b>Done</b></td></tr>
+<tr><td>BC-08/09/10</td><td>Interest-ranked people list · sub-second presence · timed chat expiry</td><td>P1</td><td>Milestone 2</td></tr>
+</table>
+<p><b>Use cases</b> for each main backlog item — actors, main/alternate flows, pre/postconditions — are in <code>docs/USE-CASES.md</code> (UC-1 account &amp; profile, UC-2 pin venue, UC-3 check in &amp; discover, UC-4 double opt-in match with withdrawal, UC-5 ephemeral chat). §5.4 details the two most important ones at component level.</p>
+
+<!-- ============ 5. DESIGN ============ -->
+<h2>5 · Analysis model, design &amp; architecture</h2>
+
+<h3>5.1 System context (unchanged from M0) and as-built note</h3>
+<p>The M0 architecture stands: React Native/Expo app ↔ Supabase (Auth, Postgres + RLS, Realtime). As built in M1, the app talks <i>only</i> to Supabase; the Socket.io presence server and OpenAI embedding path arrive in M2. Server-side logic that must see more than any single user may see lives in Postgres triggers.</p>
+<div class="figure">
+  <img src="../architecture.png" style="max-width:86%" alt="system context diagram">
+  <div class="cap">Fig. 1 — System context (Milestone 0 diagram, still accurate; M2 components dashed in concept)</div>
+</div>
+
+<h3>5.2 Analysis model — data &amp; flow</h3>
+<div class="figure">
+<pre class="mermaid">
+erDiagram
+    PROFILE ||--o| PIN : "has at most one"
+    VENUE ||--o{ PIN : hosts
+    PROFILE ||--o{ MEET_REQUEST : "sends (readable only by sender)"
+    MATCH }o--|| VENUE : at
+    PROFILE ||--o{ MATCH : "participates"
+    MATCH ||--o{ MESSAGE : "contains (ON DELETE CASCADE)"
+</pre>
+<div class="cap">Fig. 2 — Entities. PIN's primary key is user_id (one pin per person; leaving = deletion). MATCH stores the ordered unique pair. Messages cannot outlive the match.</div>
+</div>
+<div class="figure">
+<pre class="mermaid">
+sequenceDiagram
+    participant A as Device A
+    participant DB as Postgres (RLS + triggers)
+    participant B as Device B
+    A->>DB: INSERT meet_request A→B (only A can read it)
+    B->>DB: INSERT meet_request B→A
+    DB->>DB: trigger sees both sides → INSERT match
+    DB-->>A: Realtime match INSERT
+    DB-->>B: Realtime match INSERT
+    B->>DB: DELETE request B→A (withdraw)
+    DB->>DB: trigger deletes match, messages cascade
+    DB-->>A: Realtime match DELETE → both dismiss
+</pre>
+<div class="cap">Fig. 3 — Matching flow. The client never checks reciprocity — it can't (RLS); the database is the matchmaker.</div>
+</div>
+<p><b>Pin lifecycle (state machine):</b> <code>(none) →I'm heading there→ heading →I'm here→ arrived →Leave→ (none)</code>, with <code>discoverable</code> togglable in either active state; visibility to others ≡ <code>discoverable = true</code>, enforced by RLS.</p>
+
+<h3 class="pb">5.3 Module boundaries, design classes &amp; API contract</h3>
+<pre>
+app/src/
+├── app/index.tsx        AUTH GATE: session → profile → home routing (+ SignIn, ProfileSetup)
+├── components/
+│   ├── MapHome.tsx      HOME: map, venue sheet, pin lifecycle, status card, list fallback;
+│   │                    owns both realtime channels and all pin/match state
+│   ├── PeopleHere.tsx   presence list + "Open to meet?"   (props-driven child)
+│   ├── MatchScreen.tsx  match reveal overlay              (pure presentational)
+│   └── ChatScreen.tsx   chat history + live message subscription
+└── lib/  supabase.ts (the single configured client) · theme.ts (design tokens)
+</pre>
+<p>Boundary rule: only <code>MapHome</code> owns realtime subscriptions and mutation state; overlays are children driven by props/callbacks. The server interface is the schema — <b>RLS policies are the API contract</b> (no custom endpoints in M1):</p>
+<table>
+<tr><th>Table</th><th>Client operations</th><th>Allowed when (RLS)</th></tr>
+<tr><td>profiles</td><td>select / insert / update</td><td>own row; select also while owner has a discoverable pin</td></tr>
+<tr><td>venues</td><td>select</td><td>any signed-in user</td></tr>
+<tr><td>pins</td><td>select / insert / update / delete</td><td>own row; others' rows only where discoverable = true</td></tr>
+<tr><td>meet_requests</td><td>insert / select / delete</td><td>requester = self; <b>targets can never read them</b></td></tr>
+<tr><td>matches</td><td>select</td><td>participant; created/deleted only by triggers</td></tr>
+<tr><td>messages</td><td>select / insert</td><td>match participant; insert requires sender = self</td></tr>
+</table>
+<p>Realtime: <code>postgres_changes</code> on pins/matches/messages (RLS-filtered per subscriber) plus one data-free broadcast ("pins changed — refetch"), needed because RLS correctly suppresses UPDATE events whose new row a subscriber may no longer see (found in two-device testing; documented in <code>docs/BUGLOG.md</code>).</p>
+
+<h3>5.4 Component designs for the two key use cases</h3>
+<p><b>UC-3 Presence.</b> <code>MapHome</code> keeps a <code>pinsVersion</code> counter. Every mutation (head there / I'm here / leave / toggle visibility) writes its row, then broadcasts. Both event sources just bump the counter; effects depending on it refetch own-pin, venue counts, and the people list. The pattern is <i>event → invalidate → refetch</i>: events carry nothing the UI trusts — every query is answered by the database under RLS, so the UI can never show data the viewer isn't entitled to.</p>
+<p><b>UC-4 Matching.</b> <code>PeopleHere</code> renders the request button from the user's own outgoing requests (toggle = insert/delete one row). Match detection lives in <code>MapHome</code>'s matches channel: an INSERT involving the user triggers profile enrichment and the match screen; a DELETE with the current match id clears match, chat, and pill in one update. Privacy is structural: no policy exists that could return a one-sided request to its target.</p>
+
+<h3>5.5 Architecture Decision Records</h3>
+<p>Two ADRs are in <code>docs/adr/</code>: <b>ADR-0001</b> — Supabase BaaS instead of a custom backend for the MVP (end-to-end in days, $0, RLS as structural privacy; accepts free-tier pause risk and vendor coupling, with Socket.io arriving M2 where BaaS realtime is weakest). <b>ADR-0002</b> — double opt-in via SECURITY DEFINER database triggers (atomic with the request write, race-free via the ordered unique pair, "messages cannot outlive consent" expressed as a cascade; accepts SQL-resident logic kept in versioned migrations).</p>
+
+<h3>5.6 Design patterns</h3>
+<p><b>Observer (pub-sub):</b> Realtime channels push database change events to subscribed devices — presence and chat are push-shaped; polling would be stale or would hammer the free tier. <b>Mediator:</b> the matching trigger mediates between two users who must not observe each other's intent; each talks only to the database, which alone sees both sides. (Also present: Singleton for the configured Supabase client; the pin state machine of §5.2.)</p>
+
+<h3>5.7 UX &amp; cross-platform considerations</h3>
+<p>Seven-screen dark-theme design implemented 1:1 from the team's design canvas (tokens centralized in <code>lib/theme.ts</code>); multi-screen flow sign-in → profile → map → venue sheet → people → match → chat; one-handed night-out ergonomics (≥44pt targets, bottom-anchored actions). React Native + Expo compiles for iOS and Android from one codebase with stock components and safe-area handling; iOS is the M1 verification platform, the only platform-variant piece being map tiles — and BC-11's venue list doubles as the no-map path. Accessibility baseline: contrast-checked amber-on-near-black palette, text redundancy for color cues.</p>
+
+<!-- ============ 6. SETUP ============ -->
+<h2 class="pb">6 · Setup &amp; run instructions</h2>
+<table>
+<tr><th>Requirement</th><th>Version / note</th></tr>
+<tr><td>macOS + Xcode</td><td>Xcode 16+, iOS Simulator runtime installed (open Xcode once)</td></tr>
+<tr><td>Node.js</td><td>v20+ (<code>node --version</code>)</td></tr>
+<tr><td>Expo Go</td><td>installed automatically into the simulator on first run; no Apple developer account needed</td></tr>
+</table>
+<pre>git clone git@github.com:Arcce9/BeerChat.git
+cd BeerChat/app
+npm install
+npx expo start        # press i → iOS Simulator; shift+i to add a second simulator</pre>
+<p><b>Environment variables</b> (<code>app/.env.example</code>): <code>EXPO_PUBLIC_SUPABASE_URL</code>, <code>EXPO_PUBLIC_SUPABASE_ANON_KEY</code>. <b><code>app/.env</code> is committed deliberately</b>, pointing at the team's hosted demo database, so the TA has zero configuration. The value is Supabase's <i>publishable</i> key — the class of key a released mobile app ships publicly by design; every table is RLS-protected and no privileged key exists in the repository.</p>
+<p><b>Migrations &amp; seed data:</b> already applied to the hosted database — no action needed. The complete, ordered schema (six migrations: profiles → venues/pins + six seeded Tuscaloosa venues → presence/RLS → matching → unmatch → chat) is in <code>supabase/migrations/</code>; a fresh instance is stood up with <code>supabase link &amp;&amp; supabase db push</code>.</p>
+<p><b>Demo accounts</b> (profiles and overlapping interests pre-set; new signups also work — email confirmation is disabled for the demo):</p>
+<table>
+<tr><th>User</th><th>Email</th><th>Password</th></tr>
+<tr><td>Alex (device A)</td><td><code>ta.demo1@beerchat.dev</code></td><td><code>BeerChat-M1-demo1</code></td></tr>
+<tr><td>Sam (device B)</td><td><code>ta.demo2@beerchat.dev</code></td><td><code>BeerChat-M1-demo2</code></td></tr>
+</table>
+<p class="muted">⚠️ Free-tier note: Supabase pauses idle free projects. If the app shows network errors on first launch, the database is likely waking (2–3 min) — we also check it daily during grading; contact us if needed.</p>
+
+<!-- ============ 7. VERIFICATION ============ -->
+<h2>7 · Verification guide (what to run and check)</h2>
+<p>Two simulators, the two demo accounts, ≈10 minutes. Same script as <code>docs/VERIFICATION.md</code>.</p>
+<table>
+<tr><th>#</th><th>Do</th><th>Expect</th><th>Verifies</th></tr>
+<tr><td>1</td><td>Device A: sign in as demo 1</td><td>Dark Tuscaloosa map, six amber venue pins</td><td>BC-01/03</td></tr>
+<tr><td>2</td><td>Kill and reopen the app</td><td>Still signed in</td><td>session persistence</td></tr>
+<tr><td>3</td><td>Tap <b>List</b> (top-left)</td><td>Plain venue list; a row opens the venue sheet</td><td>BC-11</td></tr>
+<tr><td>4</td><td>Venue → <b>I'm heading there</b>; relaunch</td><td>Status card persists ("Heading to …")</td><td>BC-03</td></tr>
+<tr><td>5</td><td><b>I'm here</b> + visibility ON (both devices, same venue)</td><td>"here now" counts; "See who's open to hello"</td><td>BC-04</td></tr>
+<tr><td>6</td><td>Open the people list on both</td><td>Each lists the other (first name + interests), appearing <b>live</b></td><td>BC-05</td></tr>
+<tr><td>7</td><td>A: visibility OFF</td><td>A vanishes from B's list within ~1s, no refresh</td><td>RLS + realtime</td></tr>
+<tr><td>8</td><td>A: <b>Open to meet?</b> on B</td><td>A shows "Waiting on …"; <b>B sees nothing at all</b></td><td>BC-06 privacy</td></tr>
+<tr><td>9</td><td>B: <b>Open to meet?</b> on A</td><td>Both devices simultaneously: "YOU BOTH SAID YES" + shared interests</td><td>BC-06</td></tr>
+<tr><td>10</td><td>A: <b>Say hi</b>, message; B: chat pill, reply</td><td>Messages appear on the other device in real time</td><td>BC-07</td></tr>
+<tr><td>11</td><td>Either: tap "Waiting on…" to withdraw</td><td>Match screen, chat pill and conversation vanish on <b>both</b> devices</td><td>consent is ongoing</td></tr>
+</table>
+<p><b>Known M1 limitations:</b> iOS-verified (Android planned); manual check-in (geofencing M2); time-based chat expiry designed but not yet implemented (chat currently dies on withdrawal); free-tier database wake-up delay possible.</p>
+
+<!-- ============ 8. CONTRIBUTIONS ============ -->
+<h2>8 · Contribution statements</h2>
+<table>
+<tr><th>Member</th><th>Milestone 1 contribution</th></tr>
+<tr><td><b>Margulan Baizhakyp</b></td><td>Implemented the end-to-end MVP: Supabase schema, migrations and Row Level Security, auth and profile flows, map/pins, live presence, the trigger-based double opt-in matching engine, and realtime chat; maintained the development plan and bug log.</td></tr>
+<tr><td><b>Arda Alici</b></td><td>Designed the seven-screen dark-theme UI the app implements, owned the Expo/simulator environment, and ran the two-device testing of presence, matching, and chat.</td></tr>
+<tr><td><b>Karthik Gaur</b></td><td>Authored and maintained the requirements artifacts — backlog, use cases, Definition of Done, and the TA verification guide — and reviewed the Milestone 1 report and API contract documentation.</td></tr>
+</table>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'neutral', er: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+</script>
+</body>
+</html>
