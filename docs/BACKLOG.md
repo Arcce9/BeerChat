@@ -35,10 +35,10 @@ These are not user stories, just work that has to happen. Listed so it doesn't g
 
 | ID | Task | Milestone | Owner |
 |----|------|-----------|-------|
-| T-01 | Expo scaffold, runs clean in the iOS simulator | 1 | Arda (done) |
-| T-02 | Supabase project, schema for the five tables, auth turned on | 1 | Margulan (done) |
-| T-03 | Seed venue list for the map | 1 | Arda (done) |
-| T-04 | Row level security so users can only read the rows they should | 2 | Margulan (done — pulled into M1: RLS is the privacy mechanism for presence and matching) |
+| T-01 | Expo scaffold, runs clean in the iOS simulator | 1 | Karthik (done) |
+| T-02 | Supabase project, schema for the five tables, auth turned on | 1 | Karthik: auth + profiles · Arda: presence + matching · Margulan: chat (done) |
+| T-03 | Seed venue list for the map | 1 | Karthik (done) |
+| T-04 | Row level security so users can only read the rows they should | 2 | Arda + Margulan (done — pulled into M1: RLS is the privacy mechanism for presence and matching) |
 | T-05 | Node + Socket.io presence server | 2 | tbd |
 | T-06 | Embedding pipeline: interest tags to OpenAI to pgvector, plus the ranking query | 2 | Karthik |
 | T-07 | Automated tests for matching and chat | 2 | Karthik |

@@ -108,7 +108,7 @@ Realtime channels: `postgres_changes` on pins / matches / messages (RLS-filtered
 
 ## 7. UX and cross-platform considerations
 
-- Seven-screen dark-theme design (Claude Design canvas, linked in [DESIGN.md](DESIGN.md)); implemented tokens live in `lib/theme.ts` — single source for colors.
+- Seven-screen dark-theme design: wireframes of all seven screens are Fig. 4 of the [Milestone 1 report](Milestone-1-Report.pdf); the full visual canvas is linked in [DESIGN.md](DESIGN.md). Implemented tokens live in `lib/theme.ts` — single source for colors.
 - Multi-screen interface: sign-in → profile setup → map → venue sheet → people list → match → chat.
 - One-handed, night-out ergonomics: ≥44 pt touch targets, bottom-anchored actions, short copy.
 - Cross-platform: React Native + Expo compiles for iOS and Android from one codebase; all UI is stock RN components with safe-area handling. iOS is the M1 verification platform; the only platform-variant piece is map tiles (Apple Maps on iOS, Google fallback on Android). BC-11's venue list doubles as the no-map path.

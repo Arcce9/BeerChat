@@ -31,6 +31,26 @@
   .shots img { width: 100%; border: 1px solid #ddd; border-radius: 8px; }
   .shots figcaption { font-size: 8.5pt; color: #555; margin-top: 2pt; }
   .pb { page-break-before: always; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .figure img, .mermaid svg { max-height: 3.6in; }
+  .wf { display: flex; gap: 5pt; justify-content: center; margin: 6pt 0; }
+  .wf .ph { width: 0.96in; height: 1.95in; background: #0B0B0D; color: #fff; border: 2px solid #444; border-radius: 9px; padding: 5pt 4pt; font-size: 5.2pt; line-height: 1.3; display: flex; flex-direction: column; gap: 2.5pt; overflow: hidden; }
+  .wf .t { font-weight: 700; font-size: 6pt; }
+  .wf .m { color: rgba(255,255,255,.55); }
+  .wf .btn { background: #F2A93B; color: #0B0B0D; border-radius: 4px; padding: 2pt 3pt; text-align: center; font-weight: 700; margin-top: auto; }
+  .wf .btn2 { background: #F2A93B; color: #0B0B0D; border-radius: 4px; padding: 2pt 3pt; text-align: center; font-weight: 700; }
+  .wf .in { border: 1px solid #2A2C32; background: #17181B; border-radius: 3px; padding: 2pt 3pt; color: rgba(255,255,255,.45); }
+  .wf .card { border: 1px solid #26282D; background: #17181B; border-radius: 4px; padding: 2.5pt 3pt; }
+  .wf .chip { display: inline-block; border: 1px solid #F2A93B; border-radius: 99px; padding: 0 3pt; margin: 1pt 1pt 0 0; }
+  .wf .chip.on { background: #F2A93B; color: #0B0B0D; }
+  .wf .map { flex: 1; background: #1F2126; border-radius: 4px; position: relative; }
+  .wf .pin { position: absolute; background: #F2A93B; color: #0B0B0D; border-radius: 99px; padding: 0 3pt; font-weight: 700; }
+  .wf .tog { display: flex; justify-content: space-between; }
+  .wf .sw { width: 12pt; height: 6pt; border-radius: 99px; background: #F2A93B; }
+  .wf .bub { border-radius: 5px; padding: 2pt 3pt; max-width: 80%; background: #1F2126; }
+  .wf .bub.me { background: #F2A93B; color: #0B0B0D; align-self: flex-end; }
+  .wf .lbl { text-align: center; font-size: 6pt; color: #555; margin-top: 3pt; }
+  .wfcol { display: flex; flex-direction: column; align-items: center; }
   a { color: #b07714; text-decoration: none; }
   .callout { background: #faf3e3; border-left: 3px solid #F2A93B; padding: 6pt 10pt; margin: 8pt 0; }
 </style>
@@ -63,7 +83,7 @@
   <figure><img src="img/map-a.png" alt="map A"><figcaption>Device A (demo user): dark map with venue pins, BC-11 List fallback (top-left), status card "You're at Houndstooth Sports Bar · Visible to people here", active match pill "Chat with test2".</figcaption></figure>
   <figure><img src="img/map-b.png" alt="map B"><figcaption>Device B (matched user), running side by side: same venue, its own live match pill "Chat with Margo".</figcaption></figure>
 </div>
-<p class="muted" style="font-size:9pt">Full seven-screen visual design (implemented 1:1 by the app): team design canvas, linked in <code>docs/DESIGN.md</code>.</p>
+<p class="muted" style="font-size:9pt">Wireframes of all seven screens are in Fig. 4 (§5.7); the full visual design canvas is linked in <code>docs/DESIGN.md</code>.</p>
 
 <!-- ============ 2. PRODUCT BRIEF ============ -->
 <h2>2 · Updated product brief &amp; MVP scope</h2>
@@ -84,7 +104,7 @@
 <div class="callout"><b>Definition of Done</b> — a backlog item is done when: (1) TypeScript compiles clean (<code>npx tsc --noEmit</code>); (2) the item's acceptance test passes in the two-simulator run; (3) its privacy rules are enforced by Row Level Security in the database, not only by UI; (4) it is committed with a step-referencing message, and any bug found on the way has a symptom/cause/fix entry in <code>docs/BUGLOG.md</code>.</div>
 
 <!-- ============ 4. REQUIREMENTS ============ -->
-<h2 class="pb">4 · Requirements: prioritized backlog &amp; use cases</h2>
+<h2>4 · Requirements: prioritized backlog &amp; use cases</h2>
 <p>Full backlog with points and engineering tasks: <code>docs/BACKLOG.md</code>. All P0 stories are done and verified; statuses below are as of this submission.</p>
 <table>
 <tr><th>ID</th><th>User story (condensed)</th><th>Pri</th><th>Status</th></tr>
@@ -177,10 +197,22 @@ app/src/
 <p><b>Observer (pub-sub):</b> Realtime channels push database change events to subscribed devices — presence and chat are push-shaped; polling would be stale or would hammer the free tier. <b>Mediator:</b> the matching trigger mediates between two users who must not observe each other's intent; each talks only to the database, which alone sees both sides. (Also present: Singleton for the configured Supabase client; the pin state machine of §5.2.)</p>
 
 <h3>5.7 UX &amp; cross-platform considerations</h3>
-<p>Seven-screen dark-theme design implemented 1:1 from the team's design canvas (tokens centralized in <code>lib/theme.ts</code>); multi-screen flow sign-in → profile → map → venue sheet → people → match → chat; one-handed night-out ergonomics (≥44pt targets, bottom-anchored actions). React Native + Expo compiles for iOS and Android from one codebase with stock components and safe-area handling; iOS is the M1 verification platform, the only platform-variant piece being map tiles — and BC-11's venue list doubles as the no-map path. Accessibility baseline: contrast-checked amber-on-near-black palette, text redundancy for color cues.</p>
+<div class="figure">
+<div class="wf">
+ <div class="wfcol"><div class="ph"><div class="t">BeerChat</div><div class="m">Meet the people already around you</div><div class="in">Email</div><div class="in">Password</div><div class="btn">Sign in</div><div class="m" style="text-align:center">Create account</div></div><div class="lbl">1 Sign in</div></div>
+ <div class="wfcol"><div class="ph"><div class="t">Who are you tonight?</div><div class="in">First name</div><div class="m">Pick 3–5 interests</div><div><span class="chip on">live music</span><span class="chip">football</span><span class="chip on">startups</span><span class="chip">hiking</span><span class="chip on">board games</span><span class="chip">trivia</span></div><div class="m">You're invisible until you check in and choose to be seen.</div><div class="btn">Continue</div></div><div class="lbl">2 Profile setup</div></div>
+ <div class="wfcol"><div class="ph"><div class="tog"><span class="chip">List</span><span class="m">Sign out</span></div><div class="map"><span class="pin" style="top:18%;left:14%">Houndstooth · 3</span><span class="pin" style="top:45%;left:40%">Innisfree · 1</span><span class="pin" style="top:68%;left:10%">Druid City · 0</span></div><div class="card"><b>Heading to Houndstooth</b><div class="m">Hidden until you check in · Change</div></div></div><div class="lbl">3 Home map</div></div>
+ <div class="wfcol"><div class="ph"><div class="map" style="flex:0 0 22%"></div><div class="card" style="flex:1"><div class="t">Houndstooth Sports Bar</div><div class="tog"><span class="card">3<br><span class="m">heading there</span></span><span class="card">2<br><span class="m">here now</span></span></div><div class="tog" style="margin-top:2pt"><span>Let people here see me</span><span class="sw"></span></div><div class="btn2" style="margin-top:3pt">I'm here</div><div class="m" style="text-align:center">See who's open to hello</div></div></div><div class="lbl">4 Venue sheet</div></div>
+ <div class="wfcol"><div class="ph"><div class="t">Open to hello · Houndstooth</div><div class="card"><b>Sam</b> <span class="m">here 20 min</span><br><span class="chip">startups</span><span class="chip">hiking</span><div class="btn2" style="margin-top:2pt">Open to meet?</div></div><div class="card"><b>Jordan</b> <span class="m">here 5 min</span><br><span class="chip">live music</span><div class="in" style="margin-top:2pt;text-align:center">Waiting on Jordan…</div></div></div><div class="lbl">5 People here</div></div>
+ <div class="wfcol"><div class="ph" style="justify-content:center;text-align:center"><div class="t" style="color:#F2A93B">YOU BOTH SAID YES</div><div class="tog" style="justify-content:center;gap:4pt"><span class="card" style="font-size:8pt">A</span><span class="card" style="font-size:8pt">S</span></div><div>Alex &amp; Sam</div><div><span class="chip on">startups</span><span class="chip on">hiking</span></div><div class="m">This chat disappears tonight</div><div class="btn2" style="margin-top:4pt">Say hi</div></div><div class="lbl">6 It's a match</div></div>
+ <div class="wfcol"><div class="ph"><div class="t">Sam · Houndstooth</div><div class="m">ephemeral — dies with the match</div><div class="bub">Where are you sitting?</div><div class="bub me">Back patio, amber jacket</div><div class="bub">On my way 🍺</div><div class="in" style="margin-top:auto">Message</div></div><div class="lbl">7 Chat</div></div>
+</div>
+<div class="cap">Fig. 4 — Wireframes of the seven screens (multi-screen flow left to right). The running app implements these 1:1; the full visual design canvas is linked in <code>docs/DESIGN.md</code>.</div>
+</div>
+<p>Seven-screen dark-theme design (Fig. 4) implemented 1:1 from the team's design canvas (tokens centralized in <code>lib/theme.ts</code>); multi-screen flow sign-in → profile → map → venue sheet → people → match → chat; one-handed night-out ergonomics (≥44pt targets, bottom-anchored actions). React Native + Expo compiles for iOS and Android from one codebase with stock components and safe-area handling; iOS is the M1 verification platform, the only platform-variant piece being map tiles — and BC-11's venue list doubles as the no-map path. Accessibility baseline: contrast-checked amber-on-near-black palette, text redundancy for color cues.</p>
 
 <!-- ============ 6. SETUP ============ -->
-<h2 class="pb">6 · Setup &amp; run instructions</h2>
+<h2>6 · Setup &amp; run instructions</h2>
 <table>
 <tr><th>Requirement</th><th>Version / note</th></tr>
 <tr><td>macOS + Xcode</td><td>Xcode 16+, iOS Simulator runtime installed (open Xcode once)</td></tr>
@@ -224,9 +256,9 @@ npx expo start        # press i → iOS Simulator; shift+i to add a second simul
 <h2>8 · Contribution statements</h2>
 <table>
 <tr><th>Member</th><th>Milestone 1 contribution</th></tr>
-<tr><td><b>Margulan Baizhakyp</b></td><td>Implemented the end-to-end MVP: Supabase schema, migrations and Row Level Security, auth and profile flows, map/pins, live presence, the trigger-based double opt-in matching engine, and realtime chat; maintained the development plan and bug log.</td></tr>
-<tr><td><b>Arda Alici</b></td><td>Designed the seven-screen dark-theme UI the app implements, owned the Expo/simulator environment, and ran the two-device testing of presence, matching, and chat.</td></tr>
-<tr><td><b>Karthik Gaur</b></td><td>Authored and maintained the requirements artifacts — backlog, use cases, Definition of Done, and the TA verification guide — and reviewed the Milestone 1 report and API contract documentation.</td></tr>
+<tr><td><b>Karthik Gaur</b></td><td>Built Steps 0–2 of the MVP: the Expo/TypeScript scaffold and simulator setup, the Supabase client, sign-in/sign-up and profile-setup screens with the profiles migration, and the map home with the seeded venues and "heading there" pins; maintains the prioritized backlog and use cases.</td></tr>
+<tr><td><b>Arda Alici</b></td><td>Built Steps 3–4: venue check-in, the per-venue visibility toggle, the live "who's here" list over Realtime, and the trigger-based double opt-in matching engine with live unmatch on withdrawal; designed the seven-screen dark-theme UI the app implements and applied it as the design restyle.</td></tr>
+<tr><td><b>Margulan Baizhakyp</b></td><td>Built Step 5 (realtime ephemeral chat), the BC-11 venue-list fallback, and the matched-profiles RLS fix; packaged the repository for Milestone 1 (migrations, demo accounts, restructure) and wrote the Milestone 1 report, design document, ADRs, bug log, and TA verification guide.</td></tr>
 </table>
 
 <script>

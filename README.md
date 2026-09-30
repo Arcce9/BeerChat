@@ -107,9 +107,11 @@ Short version — the full script with expected results is in [docs/VERIFICATION
 - **Ephemeral messaging:** chats die with the match (time-based expiry planned for Milestone 2).
 
 ## Team & Milestone 1 Contributions
-- **Margulan Baizhakyp** (mbaizhakyp@crimson.ua.edu): Implemented the end-to-end MVP — Supabase schema/migrations with RLS, auth and profile flows, map/pins, live presence, the trigger-based double opt-in matching engine, and realtime chat; maintained the bug log and development plan.
-- **Arda Alici** (aalici@crimson.ua.edu): Designed the seven-screen UI (dark-theme design system the app implements), owned the Expo/simulator environment, and ran two-device testing of presence, matching, and chat.
-- **Karthik Gaur** (kgaur@crimson.ua.edu): Authored and maintained the requirements artifacts — backlog, use cases, Definition of Done, verification guide — and reviewed the Milestone 1 report and API contract documentation.
+- **Karthik Gaur** (kgaur@crimson.ua.edu): Built Steps 0–2 — the Expo/TypeScript scaffold and simulator setup, the Supabase client, sign-in/sign-up and profile-setup screens with the profiles migration, and the map home with seeded venues and "heading there" pins; maintains the prioritized backlog and use cases.
+- **Arda Alici** (aalici@crimson.ua.edu): Built Steps 3–4 — venue check-in, per-venue visibility toggle, the live "who's here" list over Realtime, and the trigger-based double opt-in matching engine with live unmatch; designed the seven-screen dark-theme UI and applied it as the design restyle.
+- **Margulan Baizhakyp** (mbaizhakyp@crimson.ua.edu): Built Step 5 (realtime ephemeral chat), the BC-11 venue-list fallback, and the matched-profiles RLS fix; packaged the repository for Milestone 1 (migrations, demo accounts, restructure) and wrote the Milestone 1 report, design document, ADRs, bug log, and TA verification guide.
+
+Per-milestone contributions are tracked with git tags (`git shortlog -sn milestone-0..milestone-1`).
 
 ## License & Course Information
 This repository is developed for CS 415/515: Software Engineering.
