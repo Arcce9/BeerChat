@@ -36,6 +36,7 @@ export default function MapHome({ userId }: { userId: string }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pinsVersion, setPinsVersion] = useState(0);
+  const [showList, setShowList] = useState(false);
   const [match, setMatch] = useState<Match | null>(null);
   const [showMatchScreen, setShowMatchScreen] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -272,7 +273,34 @@ export default function MapHome({ userId }: { userId: string }) {
         <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
           <Text style={styles.signOutText}>Sign out</Text>
         </Pressable>
+        {/* BC-11: plain-list fallback so check-in works even if the map won't load */}
+        <Pressable style={styles.listToggle} onPress={() => setShowList(true)}>
+          <Text style={styles.listToggleText}>List</Text>
+        </Pressable>
       </SafeAreaView>
+
+      {showList && (
+        <View style={styles.listOverlay}>
+          <SafeAreaView style={styles.listSafeArea}>
+            <Text style={styles.listTitle}>Venues</Text>
+            {venues.map((venue) => (
+              <Pressable
+                key={venue.id}
+                style={styles.listRow}
+                onPress={() => {
+                  setSelected(venue);
+                  setShowList(false);
+                }}
+              >
+                <Text style={styles.listRowText}>{venue.name}</Text>
+              </Pressable>
+            ))}
+            <Pressable onPress={() => setShowList(false)}>
+              <Text style={styles.closeText}>close</Text>
+            </Pressable>
+          </SafeAreaView>
+        </View>
+      )}
 
       {pin && !selected && !peopleVenue && pinnedVenue && (
         <View style={styles.statusCard}>
@@ -438,6 +466,56 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 16,
+  },
+  listToggle: {
+    position: 'absolute',
+    top: 4,
+    left: 16,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+  },
+  listToggleText: {
+    color: colors.text,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  listOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: colors.bg,
+    zIndex: 5,
+  },
+  listSafeArea: {
+    flex: 1,
+    paddingHorizontal: 24,
+    gap: 10,
+  },
+  listTitle: {
+    color: colors.text,
+    fontSize: 28,
+    fontWeight: 'bold',
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  listRow: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  listRowText: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: '600',
   },
   signOutText: {
     color: colors.textSecondary,
