@@ -7,7 +7,7 @@ import { colors } from '@/lib/theme';
 import PeopleHere from '@/components/PeopleHere';
 import MatchScreen from '@/components/MatchScreen';
 import ChatScreen from '@/components/ChatScreen';
-import { countPresence, msUntil, pinActionFor } from '@/lib/logic';
+import { msUntil, pinActionFor } from '@/lib/logic';
 
 type Venue = { id: string; name: string; lat: number; lng: number };
 type Pin = {
@@ -77,15 +77,13 @@ export default function MapHome({ userId }: { userId: string }) {
       .then(({ data }) => setPin(data));
   }, [userId, pinsVersion]);
 
-  // discoverable counts for whichever venue's sheet is open
+  // anonymous counts for whichever venue's sheet is open. Identities are only visible to people
+  // checked in at the same venue (RLS, SEC-1), so counts come from an aggregate-only function.
   useEffect(() => {
     if (!selected) return;
     supabase
-      .from('pins')
-      .select('status')
-      .eq('venue_id', selected.id)
-      .eq('discoverable', true)
-      .then(({ data }) => setCounts(countPresence((data ?? []).map((p) => p.status))));
+      .rpc('venue_counts', { target_venue: selected.id })
+      .then(({ data }) => setCounts(data?.[0] ?? { heading: 0, arrived: 0 }));
   }, [selected, pinsVersion]);
 
   // live updates: anyone's check-in/leave/visibility change bumps pinsVersion.

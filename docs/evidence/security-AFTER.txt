@@ -1,0 +1,46 @@
+# AFTER security migration 20261101000009 — recorded 2026-11-01 23:56 UTC against the live Supabase project
+# Command: npm run test:integration
+
+Running one project: integration
+PASS integration __tests__/integration/security.test.ts
+  SEC-1 (OWASP A01) presence enumeration
+    ✓ an outsider cannot list who is checked in at a venue (67 ms)
+    ✓ an outsider cannot read the profiles of people at a venue (53 ms)
+    ✓ someone checked in at a different venue cannot list this one (170 ms)
+    ✓ anyone signed in can still see anonymous counts for a venue (57 ms)
+  SEC-2 (OWASP A01) unauthorized meet requests
+    ✓ an outsider cannot send a meet request to someone at a venue (209 ms)
+    ✓ a request cannot target someone who is hidden (372 ms)
+    ✓ a legitimate request between two visible people at the venue still works (196 ms)
+  SEC-3 (OWASP A04/A03) server-side input validation
+    ✓ rejects an oversized display name (82 ms)
+    ✓ rejects more than 5 interests (68 ms)
+    ✓ accepts a normal profile update (55 ms)
+
+PASS integration __tests__/integration/flows.test.ts (5.806 s)
+  Auth
+    ✓ rejects a wrong password (127 ms)
+    ✓ gives signed-out clients no access to user data (108 ms)
+  Presence (BC-04/05)
+    ✓ shows a visible person to someone checked in at the same venue (57 ms)
+    ✓ hides a person the moment they turn visibility off (165 ms)
+  Double opt-in matching (BC-06)
+    ✓ keeps a one-sided request invisible to its target (176 ms)
+    ✓ creates exactly one match, visible to both, when the request is returned (181 ms)
+    ✓ does not let an outsider see the match (58 ms)
+    ✓ refuses to let a client create matches directly (54 ms)
+  Chat (BC-07) and expiry (BC-10)
+    ✓ sets the match to expire 6 hours after it was made (52 ms)
+    ✓ delivers a message to the other participant in real time (2309 ms)
+    ✓ rejects a message sent under someone else's name (63 ms)
+    ✓ keeps the conversation private from outsiders (55 ms)
+    ✓ dissolves the match and deletes the chat when either side withdraws (238 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       23 passed, 23 total
+Snapshots:   0 total
+Time:        9.338 s, estimated 10 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

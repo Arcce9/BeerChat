@@ -32,11 +32,9 @@ export const signIn = async (n: 1 | 2 | 3, name: string, interests: string[]): P
   const client = anonClient();
   const email = `int.user${n}@beerchat.dev`;
   const password = env.INTEGRATION_TEST_PASSWORD ?? 'BeerChat-integration-2026';
-  let { data, error } = await client.auth.signInWithPassword({ email, password });
-  if (error) {
-    ({ data, error } = await client.auth.signUp({ email, password }));
-    if (error) throw error;
-  }
+  const signedIn = await client.auth.signInWithPassword({ email, password });
+  const { data, error } = signedIn.error ? await client.auth.signUp({ email, password }) : signedIn;
+  if (error) throw error;
   const id = data.user!.id;
   await client.from('profiles').upsert({ id, display_name: name, interests });
   return { client, id, name };

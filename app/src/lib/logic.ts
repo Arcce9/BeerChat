@@ -34,11 +34,6 @@ export const rankBySharedInterests = (mine: string[], people: Person[]) =>
         (a.person.profiles?.display_name ?? '').localeCompare(b.person.profiles?.display_name ?? '')
     );
 
-export const countPresence = (statuses: PinStatus[]) => ({
-  heading: statuses.filter((s) => s === 'heading').length,
-  arrived: statuses.filter((s) => s === 'arrived').length,
-});
-
 // the venue sheet's primary action for the user's own pin relative to the venue being viewed
 export type PinAction = 'headThere' | 'imHere' | 'here';
 export const pinActionFor = (pin: Pin | null, venueId: string): PinAction => {

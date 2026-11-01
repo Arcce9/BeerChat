@@ -3,7 +3,6 @@ import {
   MAX_INTERESTS,
   MAX_MESSAGE_LENGTH,
   MAX_NAME_LENGTH,
-  countPresence,
   expiryFrom,
   formatClock,
   initialOf,
@@ -75,15 +74,6 @@ describe('rankBySharedInterests (BC-08)', () => {
     const people = [person('B', []), person('A', ['hiking'])];
     rankBySharedInterests(me, people);
     expect(people[0].profiles?.display_name).toBe('B');
-  });
-});
-
-describe('countPresence', () => {
-  it('counts heading and arrived separately', () => {
-    expect(countPresence(['heading', 'arrived', 'arrived'])).toEqual({ heading: 1, arrived: 2 });
-  });
-  it('handles an empty venue', () => {
-    expect(countPresence([])).toEqual({ heading: 0, arrived: 0 });
   });
 });
 

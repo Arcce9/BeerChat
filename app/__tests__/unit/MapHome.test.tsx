@@ -15,6 +15,7 @@ jest.mock('react-native-maps', () => {
 
 type Filters = Record<string, unknown>;
 // list = awaited query; single = .maybeSingle(); both may depend on the .eq() filters used
+let mockCounts = (venue: string) => (venue === 'v1' ? [{ heading: 1, arrived: 2 }] : [{ heading: 0, arrived: 0 }]);
 let mockDb: Record<string, { list?: (f: Filters) => unknown; single?: (f: Filters) => unknown }> = {};
 const mockWrites: { table: string; op: string; row?: unknown }[] = [];
 
@@ -52,6 +53,8 @@ jest.mock('@/lib/supabase', () => {
   return {
     supabase: {
       from,
+      rpc: (_fn: string, args: { target_venue: string }) =>
+        Promise.resolve({ data: mockCounts(args.target_venue), error: null }),
       channel: () => channel,
       removeChannel: () => undefined,
       auth: { signOut: jest.fn() },
@@ -68,10 +71,7 @@ beforeEach(() => {
   mockWrites.length = 0;
   mockDb = {
     venues: { list: () => venues },
-    pins: {
-      single: () => null,
-      list: (f) => (f.venue_id === 'v1' ? [{ status: 'heading' }, { status: 'arrived' }, { status: 'arrived' }] : []),
-    },
+    pins: { single: () => null },
     matches: { single: () => null },
     profiles: { single: () => null },
   };
