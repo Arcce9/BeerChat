@@ -7,6 +7,7 @@ import { colors } from '@/lib/theme';
 import PeopleHere from '@/components/PeopleHere';
 import MatchScreen from '@/components/MatchScreen';
 import ChatScreen from '@/components/ChatScreen';
+import { countPresence, msUntil, pinActionFor } from '@/lib/logic';
 
 type Venue = { id: string; name: string; lat: number; lng: number };
 type Pin = {
@@ -16,7 +17,14 @@ type Pin = {
   discoverable: boolean;
 };
 type Counts = { heading: number; arrived: number };
-type MatchRow = { id: string; user_a: string; user_b: string; venue_id: string; created_at: string };
+type MatchRow = {
+  id: string;
+  user_a: string;
+  user_b: string;
+  venue_id: string;
+  created_at: string;
+  expires_at: string;
+};
 type Match = {
   id: string;
   myName: string;
@@ -25,6 +33,7 @@ type Match = {
   theirInterests: string[];
   venueName: string;
   createdAt: string;
+  expiresAt: string;
 };
 
 export default function MapHome({ userId }: { userId: string }) {
@@ -76,11 +85,7 @@ export default function MapHome({ userId }: { userId: string }) {
       .select('status')
       .eq('venue_id', selected.id)
       .eq('discoverable', true)
-      .then(({ data }) => {
-        const heading = data?.filter((p) => p.status === 'heading').length ?? 0;
-        const arrived = data?.filter((p) => p.status === 'arrived').length ?? 0;
-        setCounts({ heading, arrived });
-      });
+      .then(({ data }) => setCounts(countPresence((data ?? []).map((p) => p.status))));
   }, [selected, pinsVersion]);
 
   // live updates: anyone's check-in/leave/visibility change bumps pinsVersion.
@@ -125,6 +130,7 @@ export default function MapHome({ userId }: { userId: string }) {
       theirInterests: them?.interests ?? [],
       venueName: venue?.name ?? '',
       createdAt: row.created_at,
+      expiresAt: row.expires_at,
     };
   };
 
@@ -132,7 +138,7 @@ export default function MapHome({ userId }: { userId: string }) {
   useEffect(() => {
     supabase
       .from('matches')
-      .select('id, user_a, user_b, venue_id, created_at')
+      .select('id, user_a, user_b, venue_id, created_at, expires_at')
       .or(`user_a.eq.${userId},user_b.eq.${userId}`)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -180,6 +186,17 @@ export default function MapHome({ userId }: { userId: string }) {
       supabase.removeChannel(channel);
     };
   }, [userId]);
+
+  // BC-10: expired matches are hidden by RLS on the next fetch; this timer ends an open one live
+  useEffect(() => {
+    if (!match) return;
+    const timer = setTimeout(() => {
+      setMatch(null);
+      setShowMatchScreen(false);
+      setShowChat(false);
+    }, msUntil(match.expiresAt));
+    return () => clearTimeout(timer);
+  }, [match]);
 
   const pinnedVenue = pin ? venues.find((v) => v.id === pin.venue_id) : null;
 
@@ -244,7 +261,8 @@ export default function MapHome({ userId }: { userId: string }) {
     setPin({ ...pin, discoverable: value });
   };
 
-  const ownPinHere = !!pin && !!selected && pin.venue_id === selected.id;
+  const action = selected ? pinActionFor(pin, selected.id) : 'headThere';
+  const ownPinHere = action !== 'headThere';
 
   return (
     <View style={styles.container}>
@@ -360,7 +378,7 @@ export default function MapHome({ userId }: { userId: string }) {
                 />
               </View>
 
-              {pin.status === 'heading' ? (
+              {action === 'imHere' ? (
                 <>
                   <Pressable style={styles.button} onPress={imHere} disabled={loading}>
                     <Text style={styles.buttonText}>{loading ? '...' : "I'm here"}</Text>
@@ -443,6 +461,7 @@ export default function MapHome({ userId }: { userId: string }) {
           theirName={match.theirName}
           venueName={match.venueName}
           matchCreatedAt={match.createdAt}
+          expiresAt={match.expiresAt}
           onClose={() => setShowChat(false)}
         />
       )}

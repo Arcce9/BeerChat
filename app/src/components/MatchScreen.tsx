@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { colors } from '@/lib/theme';
+import { formatClock, initialOf, sharedInterests } from '@/lib/logic';
 
 export default function MatchScreen({
   myName,
@@ -7,6 +8,7 @@ export default function MatchScreen({
   theirName,
   theirInterests,
   venueName,
+  expiresAt,
   onSayHi,
   onDismiss,
 }: {
@@ -15,10 +17,11 @@ export default function MatchScreen({
   theirName: string;
   theirInterests: string[];
   venueName: string;
+  expiresAt?: string;
   onSayHi: () => void;
   onDismiss: () => void;
 }) {
-  const shared = myInterests.filter((i) => theirInterests.includes(i));
+  const shared = sharedInterests(myInterests, theirInterests);
 
   return (
     <View style={styles.overlay}>
@@ -26,11 +29,11 @@ export default function MatchScreen({
 
       <View style={styles.squaresRow}>
         <View style={[styles.square, styles.mySquare]}>
-          <Text style={styles.mySquareText}>{myName.charAt(0).toUpperCase()}</Text>
+          <Text style={styles.mySquareText}>{initialOf(myName)}</Text>
         </View>
         <Text style={styles.plus}>+</Text>
         <View style={[styles.square, styles.theirSquare]}>
-          <Text style={styles.theirSquareText}>{theirName.charAt(0).toUpperCase()}</Text>
+          <Text style={styles.theirSquareText}>{initialOf(theirName)}</Text>
         </View>
       </View>
 
@@ -53,6 +56,9 @@ export default function MatchScreen({
         <Pressable style={styles.sayHiButton} onPress={onSayHi}>
           <Text style={styles.sayHiText}>Say hi</Text>
         </Pressable>
+        {expiresAt ? (
+          <Text style={styles.note}>This chat disappears at {formatClock(expiresAt)}.</Text>
+        ) : null}
         <Pressable onPress={onDismiss}>
           <Text style={styles.closeText}>close</Text>
         </Pressable>
@@ -164,6 +170,11 @@ const styles = StyleSheet.create({
     color: colors.onAccent,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  note: {
+    color: colors.textTertiary,
+    fontSize: 12,
+    textAlign: 'center',
   },
   closeText: {
     color: colors.textSecondary,
