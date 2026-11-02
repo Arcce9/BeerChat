@@ -2,6 +2,8 @@
 
 Milestone 0 version, still accurate as system context at Milestone 1. As built in M1: the app talks to Supabase (Auth, Postgres+RLS, Realtime) only; the Socket.io presence server and the OpenAI embedding path are not yet wired (planned M2). Internal design now exists in [DESIGN-M1.md](DESIGN-M1.md).
 
+**As built at Milestone 2:** still Supabase-only. Additions: `matches.expires_at` with a `pg_cron` purge job (BC-10); `viewer_venue()` and `venue_counts()` database functions and venue-scoped RLS ([adr/0003](adr/0003-venue-scoped-visibility.md)); CI on GitHub Actions. The Socket.io presence server and the OpenAI embedding path remain planned (see the Milestone 2 report, "Consistency with Milestone 1").
+
 ## System context
 
 ```mermaid

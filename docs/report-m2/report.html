@@ -64,6 +64,28 @@
 </table>
 <p class="muted">Scope note (agile change, small magnitude): the Socket.io presence server (BC-09) and the OpenAI-embedding upgrade of ranking move to Milestone 3 — both are deployed services, which is that milestone's theme; BC-08 ships now with exact shared-interest ranking.</p>
 
+<h3>2.1 Consistency with Milestone 1 and the proposal</h3>
+<p>What the proposal's milestone plan ("Milestone 2: Socket.io integration, AI interest ranking, security controls, test suite") and the Milestone 1 report ("Next (M2)", known limitations) committed to, and where each item stands:</p>
+<table>
+<tr><th>Commitment</th><th>Source</th><th>Status at Milestone 2</th></tr>
+<tr><td>Test suite</td><td>Proposal M2 · M1 "Next"</td><td class="pass">Done — unit, component, integration, E2E (§3)</td></tr>
+<tr><td>Security controls</td><td>Proposal M2</td><td class="pass">Done — SEC-1…3 (§4)</td></tr>
+<tr><td>Time-based chat expiry (BC-10)</td><td>M1 "Next" · M1 known limitations</td><td class="pass">Done — 6 h expiry</td></tr>
+<tr><td>CI</td><td>M1 "Next" (proposal: M3)</td><td class="pass">Done early — GitHub Actions on every PR</td></tr>
+<tr><td>Interest-ranked list (BC-08) using OpenAI embeddings + pgvector</td><td>Proposal M2 · M1 §5.1, "Next"</td><td><b>Partly</b> — ranking ships using exact shared-interest overlap; embedding similarity (so "hiking" and "climbing" count as related) is not yet built</td></tr>
+<tr><td>Socket.io presence service (BC-09, T-05)</td><td>Proposal M2 · M1 §5.1 and ADR-0001</td><td><b>Not done</b> — presence still runs on Supabase Realtime (works, verified live on two devices); moved to M3 with the other deployed services</td></tr>
+<tr><td>Geofenced check-in</td><td>M1 known limitations</td><td><b>Not done</b> — check-in is still a manual "I'm here" button; moved to M3</td></tr>
+<tr><td>Milestone 1 workflow keeps working</td><td>M2 instructions</td><td class="pass">Verified — the integration suite and E2E flows exercise the full M1 loop on the M2 build</td></tr>
+</table>
+
+<h3>2.2 Design changes since Milestone 1</h3>
+<ul>
+<li><b>API contract</b> (M1 §5.3 table): others' <code>pins</code>/<code>profiles</code> are now readable only by viewers pinned at the same venue; venue counts come from the new <code>venue_counts()</code> RPC; <code>meet_requests</code> inserts require both parties present and the target visible; <code>matches</code>/<code>messages</code> readable only until <code>expires_at</code>. Recorded as <b>ADR-0003</b> (<code>docs/adr/0003-venue-scoped-visibility.md</code>).</li>
+<li><b>Data model</b> (M1 Fig. 2): <code>MATCH</code> gains <code>expires_at</code>; <code>PROFILE</code> gains length/count constraints. Entities and relationships are otherwise unchanged.</li>
+<li><b>Modules</b> (M1 §5.3): new <code>lib/logic.ts</code> (pure, unit-tested logic used by the screens); the boundary rule "only MapHome owns realtime subscriptions and mutation state" still holds.</li>
+<li><b>Process</b> (M1 §3): the same incremental, feature-gated model, now with pull requests, CI and the QA checklist added to the Definition of Done (<code>docs/QA-PLAN.md</code> §4).</li>
+</ul>
+
 <div class="shots">
   <figure><img src="../evidence/screens/iphone-17/04-people-ranked.png"><figcaption>BC-08 — ranked by shared interests, shared tags filled amber</figcaption></figure>
   <figure><img src="../evidence/screens/iphone-17/05-match.png"><figcaption>Match screen with BC-10 expiry note</figcaption></figure>
@@ -93,7 +115,7 @@
 <tr><td><code>MapHome.tsx</code></td><td>76.6 %</td><td>71.0 %</td><td>70.8 %</td><td>79.1 %</td></tr>
 <tr><th>All files</th><th>83.7 %</th><th>77.9 %</th><th>83.0 %</th><th>84.9 %</th></tr>
 </table>
-<div class="callout"><b>Target (enforced — the build fails below it):</b> pure logic ≥ 95 % statements / 90 % branches / 100 % functions; whole app ≥ 80 % statements &amp; lines, 70 % branches, 75 % functions. <b>Justification:</b> pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs hide, so it gets near-total coverage. The uncovered remainder of the screens is almost entirely Supabase realtime callbacks and network-error branches; mocking those would only test the mock. Those paths are instead covered against the real backend by the 23 integration tests and the E2E flows, which line-coverage tools cannot count. HTML report: <code>npm run test:coverage</code> → <code>app/coverage/index.html</code>; CI uploads it as an artifact on every run.</div>
+<div class="callout"><b>Target (enforced — the build fails below it):</b> pure logic ≥ 95 % statements / 90 % branches / 100 % functions; whole app ≥ 80 % statements &amp; lines, 70 % branches, 75 % functions. <b>Justification:</b> pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs hide, so it gets near-total coverage. The uncovered remainder of the screens is almost entirely Supabase realtime callbacks and network-error branches; mocking those would only test the mock. Those paths are instead covered against the real backend by the 23 integration tests and the E2E flows, which line-coverage tools cannot count. HTML report committed at <code>docs/evidence/coverage/index.html</code> (regenerate with <code>npm run test:coverage</code>); CI also uploads it as an artifact on every run.</div>
 
 <h3>3.3 Quality-assurance evidence</h3>
 <ul>
@@ -204,6 +226,9 @@ npm run e2e                    # optional: Maestro UI flows (brew install maestr
   <figure><img src="../evidence/screens/iphone-17/05-match.png"><figcaption>5 Double opt-in match (M1) + expiry (M2)</figcaption></figure>
   <figure><img src="../evidence/screens/iphone-17/06-chat.png"><figcaption>6 Realtime chat (M1) with expiry (M2)</figcaption></figure>
 </div>
+
+<h3>Known limitations at Milestone 2</h3>
+<p>iOS-verified only (Android not run this milestone) · check-in is manual, not geofenced · presence uses Supabase Realtime rather than the planned Socket.io service · BC-08 ranks by exact shared interests, not embeddings · email confirmation disabled for the demo · free-tier database may need 2–3 minutes to wake.</p>
 
 <h2>7 · Contribution statements</h2>
 <table>

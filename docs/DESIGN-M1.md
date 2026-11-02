@@ -77,6 +77,8 @@ Boundary rule: **only `MapHome` owns realtime subscriptions and mutation state**
 
 ## 4. API / interface contract
 
+> **Changed in Milestone 2** ([adr/0003](adr/0003-venue-scoped-visibility.md), [SECURITY.md](SECURITY.md)): others' `pins`/`profiles` are readable only by viewers pinned at the **same venue**; counts come from the `venue_counts()` RPC; `meet_requests` inserts require both parties present and the target visible; `matches`/`messages` are readable only until `expires_at`. The table below is the Milestone 1 contract.
+
 The app's server interface is the Supabase schema; **RLS policies are the contract**. No custom HTTP endpoints exist in M1.
 
 | Table | Operation (client) | Allowed when (RLS) |

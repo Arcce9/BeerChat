@@ -25,6 +25,12 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com/); ve
 
 ### Changed
 - Expo SDK patch updates (React Native 0.86.2 → 0.86.3).
+- API contract: presence visibility is venue-scoped ([ADR-0003](docs/adr/0003-venue-scoped-visibility.md)).
+
+### Deferred (planned for M2 in the proposal / M1 report)
+- Socket.io presence service (BC-09) — presence still runs on Supabase Realtime.
+- OpenAI-embedding similarity for BC-08 — ranking uses exact shared interests.
+- Geofenced check-in — check-in remains a manual button.
 
 ## [0.1.0] — Milestone 1 (2026-09-30)
 
