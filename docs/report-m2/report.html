@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BeerChat — Project Milestone 2</title>
+<style>
+  @page { size: letter; margin: 20mm 17mm; }
+  * { box-sizing: border-box; }
+  body { font: 10.5pt/1.5 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #1a1a1a; margin: 0; }
+  h1 { font-size: 24pt; letter-spacing: -0.5pt; margin: 0 0 4pt; }
+  h2 { font-size: 14.5pt; margin: 20pt 0 7pt; border-bottom: 2px solid #F2A93B; padding-bottom: 3pt; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 12pt 0 4pt; page-break-after: avoid; }
+  p, li { margin: 3pt 0; }
+  ul { margin: 3pt 0; padding-left: 18pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0; font-size: 9pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #ccc; padding: 3pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #faf3e3; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size: 8.6pt; background: #f5f5f2; border-radius: 3px; padding: 1px 3px; }
+  pre { font-family: ui-monospace, Menlo, monospace; font-size: 8.4pt; background: #f5f5f2; padding: 7pt 9pt; border-radius: 4px; white-space: pre-wrap; page-break-inside: avoid; margin: 5pt 0; }
+  .cover { height: 90vh; display: flex; flex-direction: column; justify-content: center; }
+  .cover table { width: auto; margin-top: 16pt; font-size: 10.5pt; }
+  .cover td { border: none; padding: 2pt 14pt 2pt 0; }
+  .muted { color: #666; }
+  .pass { color: #1b7f3b; font-weight: 600; }
+  .fail { color: #b3261e; font-weight: 600; }
+  .pb { page-break-before: always; }
+  .callout { background: #faf3e3; border-left: 3px solid #F2A93B; padding: 5pt 9pt; margin: 6pt 0; }
+  .todo { background: #fff3b0; padding: 1pt 3pt; }
+  .shots { display: flex; gap: 6pt; justify-content: center; page-break-inside: avoid; margin: 6pt 0; }
+  .shots figure { margin: 0; flex: 1; text-align: center; }
+  .shots img { width: 100%; border: 1px solid #ddd; border-radius: 6px; }
+  .shots figcaption { font-size: 7.8pt; color: #555; margin-top: 2pt; line-height: 1.3; }
+  a { color: #a86a0c; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div style="font-size:38pt">🍺</div>
+  <h1>BeerChat</h1>
+  <p style="font-size:12.5pt" class="muted">Real-time, venue-level social presence with double opt-in meetups</p>
+  <p style="font-size:14pt; margin-top:14pt"><b>CS 415/515 Software Engineering — Project Milestone 2 (Test It)</b></p>
+  <table>
+    <tr><td>Team</td><td>Arda Alici (aalici@crimson.ua.edu) · Margulan Baizhakyp (mbaizhakyp@crimson.ua.edu) · Karthik Gaur (kgaur@crimson.ua.edu)</td></tr>
+    <tr><td>Repository</td><td><a href="https://github.com/Arcce9/BeerChat">github.com/Arcce9/BeerChat</a></td></tr>
+    <tr><td>Git tag / release</td><td><code>milestone-2</code> · release <code>v0.2.0</code> (previous: <code>milestone-1</code> / <code>v0.1.0</code>)</td></tr>
+    <tr><td>Pull requests</td><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a> features + tests · <a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a> security · <a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a> E2E, CI, docs</td></tr>
+    <tr><td>Submitted</td><td>November 2026</td></tr>
+  </table>
+</div>
+
+<h2>1 · Expanded working application &amp; repository</h2>
+<p><b>Repository:</b> <a href="https://github.com/Arcce9/BeerChat">https://github.com/Arcce9/BeerChat</a>, tag <code>milestone-2</code>. BeerChat is a mobile app (React Native / Expo) on a hosted Supabase backend; it is run locally in the iOS Simulator (§5) — there is no separate public URL until deployment in Milestone 3. The hosted backend the app talks to is live.</p>
+<p>The Milestone 1 core loop still works end to end — <code>sign up → profile → pin a venue → check in → discover → mutual "open to meet" → chat</code> — and is now covered by automated tests at four levels, hardened against three real vulnerabilities, and expanded with two backlog features.</p>
+
+<h2>2 · New features completed since Milestone 1</h2>
+<table>
+<tr><th>Item</th><th>What the user gets</th><th>How it is built</th></tr>
+<tr><td><b>BC-08</b> Interest-ranked people list</td><td>People at your venue are ordered by how many interests you share ("2 in common"); shared interests are highlighted.</td><td>Pure ranking function (<code>rankBySharedInterests</code>: shared count → already-here before heading-over → name), unit-tested.</td></tr>
+<tr><td><b>BC-10</b> Ephemeral chat</td><td>Every match and its chat disappear 6 hours after matching; the time is shown ("disappears at 12:47 AM").</td><td><code>matches.expires_at</code>; RLS hides expired matches/messages instantly; a <code>pg_cron</code> job purges them every 15 min; a client timer closes an open chat at expiry.</td></tr>
+<tr><td><b>SEC-1…3</b> Security hardening</td><td>Only people at the same venue can see who is there (others see anonymous counts); requests only between visible people at the venue; server-side input limits.</td><td>Migration <code>…000009</code>: RLS policies, <code>venue_counts()</code> aggregate RPC, check constraints (§4).</td></tr>
+<tr><td>Quality fixes</td><td>"List"/"Sign out" no longer hidden under the iOS status bar; no profile carry-over when switching accounts; profile setup enforces the specified 3–5 interests.</td><td>Found by the E2E run and by ESLint respectively (§3.3).</td></tr>
+<tr><td>Demo &amp; tooling</td><td>One-device demo with a populated venue; CI on every PR.</td><td><code>npm run seed:demo</code>; GitHub Actions.</td></tr>
+</table>
+<p class="muted">Scope note (agile change, small magnitude): the Socket.io presence server (BC-09) and the OpenAI-embedding upgrade of ranking move to Milestone 3 — both are deployed services, which is that milestone's theme; BC-08 ships now with exact shared-interest ranking.</p>
+
+<div class="shots">
+  <figure><img src="../evidence/screens/iphone-17/04-people-ranked.png"><figcaption>BC-08 — ranked by shared interests, shared tags filled amber</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/05-match.png"><figcaption>Match screen with BC-10 expiry note</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/06-chat.png"><figcaption>Chat header: "disappears at …" (BC-10)</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/03-venue-sheet-outsider.png"><figcaption>Venue sheet: anonymous counts (SEC-1)</figcaption></figure>
+</div>
+
+<h2 class="pb">3 · Testing and quality assurance</h2>
+<h3>3.1 Test levels (full plan: <code>docs/QA-PLAN.md</code>)</h3>
+<table>
+<tr><th>Level</th><th>Tool</th><th>Scope</th><th>Result</th></tr>
+<tr><td>Static</td><td>TypeScript strict, ESLint</td><td>whole app</td><td class="pass">0 type errors, 0 lint errors</td></tr>
+<tr><td>Unit</td><td>Jest</td><td><code>logic.ts</code>: ranking, expiry, validation, pin state machine (32 tests)</td><td class="pass">pass</td></tr>
+<tr><td>Component</td><td>Jest + React Native Testing Library (Supabase mocked)</td><td>MapHome, PeopleHere, MatchScreen, ChatScreen (22 tests)</td><td class="pass">pass</td></tr>
+<tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (23 tests)</td><td class="pass">23 / 23 pass</td></tr>
+<tr><td>End-to-end UI</td><td>Maestro on iOS Simulator</td><td>full journey through the real UI (2 flows)</td><td class="pass">pass on 3 screen sizes</td></tr>
+</table>
+<p><b>Integration tests for the main user flows</b> (<code>app/__tests__/integration/flows.test.ts</code>) exercise the real system, not mocks: wrong password rejected; signed-out clients see nothing; a visible person appears to someone at the same venue and disappears when hidden; a one-sided request is invisible to its target; the return request creates exactly one match visible to both and to no outsider; clients cannot create matches directly; the match expires 6 h after creation; <b>a message is delivered to the other participant over Realtime</b>; a message cannot be sent under someone else's name; outsiders cannot read the chat; withdrawal dissolves the match and deletes the chat.</p>
+
+<h3>3.2 Coverage report and target</h3>
+<table>
+<tr><th>File</th><th>Statements</th><th>Branches</th><th>Functions</th><th>Lines</th></tr>
+<tr><td><code>lib/logic.ts</code></td><td>100 %</td><td>94.3 %</td><td>100 %</td><td>100 %</td></tr>
+<tr><td><code>MatchScreen.tsx</code></td><td>100 %</td><td>100 %</td><td>100 %</td><td>100 %</td></tr>
+<tr><td><code>ChatScreen.tsx</code></td><td>93.1 %</td><td>83.3 %</td><td>100 %</td><td>92.3 %</td></tr>
+<tr><td><code>PeopleHere.tsx</code></td><td>82.1 %</td><td>73.5 %</td><td>92.9 %</td><td>83.3 %</td></tr>
+<tr><td><code>MapHome.tsx</code></td><td>76.6 %</td><td>71.0 %</td><td>70.8 %</td><td>79.1 %</td></tr>
+<tr><th>All files</th><th>83.7 %</th><th>77.9 %</th><th>83.0 %</th><th>84.9 %</th></tr>
+</table>
+<div class="callout"><b>Target (enforced — the build fails below it):</b> pure logic ≥ 95 % statements / 90 % branches / 100 % functions; whole app ≥ 80 % statements &amp; lines, 70 % branches, 75 % functions. <b>Justification:</b> pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs hide, so it gets near-total coverage. The uncovered remainder of the screens is almost entirely Supabase realtime callbacks and network-error branches; mocking those would only test the mock. Those paths are instead covered against the real backend by the 23 integration tests and the E2E flows, which line-coverage tools cannot count. HTML report: <code>npm run test:coverage</code> → <code>app/coverage/index.html</code>; CI uploads it as an artifact on every run.</div>
+
+<h3>3.3 Quality-assurance evidence</h3>
+<ul>
+<li><b>QA checklist</b> used on every PR (also the PR template): CI green · tests for new logic/UI · privacy enforced in the DB with an integration test · new migration files only · checked on small and large iPhones · bugs logged.</li>
+<li><b>Defects found by the QA process this milestone</b> (all fixed, logged in <code>docs/BUGLOG.md</code> / commit history):
+<ul>
+<li>ESLint <code>react-hooks/set-state-in-effect</code> → a previous account's profile could carry over after switching accounts → profile state keyed by user id.</li>
+<li>E2E run → "List" and "Sign out" rendered under the iOS status bar and swallowed taps → layout fix.</li>
+<li>E2E on the small iPhone 16e → keyboard covers the password field (documented; <code>returnKeyType="next"</code> planned).</li>
+<li>Integration suite → three security vulnerabilities (§4).</li>
+<li>Requirements review → profile setup accepted 1 interest although BC-02 specifies 3–5 → fixed.</li>
+</ul></li>
+<li><b>CI:</b> GitHub Actions runs typecheck, lint and unit tests with coverage on every pull request (<a href="https://github.com/Arcce9/BeerChat/actions/runs/41370377012">first run: green, 1 m 29 s</a>); integration tests run on <code>main</code> and on demand.</li>
+</ul>
+
+<h2 class="pb">4 · Code review, cross-platform testing and security</h2>
+<h3>4.1 Peer code review</h3>
+<p>All Milestone 2 work went through three stacked pull requests, each with a description, test notes, reviewer-focus notes and the QA checklist, with both teammates requested as reviewers. A PR merges into <code>main</code> only after a teammate's approval, and <code>milestone-2</code> is tagged on the merged result, so each PR's review history is the review record:</p>
+<table>
+<tr><th>PR</th><th>Scope</th><th>Reviewers</th></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a></td><td>BC-08, BC-10, logic extraction, unit/component tests, lint fix</td><td>Arda Alici (@Arcce9), Karthik Gaur (@Karthikgaur8)</td></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a></td><td>SEC-1…3 + integration suite (test-first: failing tests committed before the fix)</td><td>Arda Alici, Karthik Gaur</td></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a></td><td>E2E flows, status-bar fix, CI, QA/security/contributing docs</td><td>Arda Alici, Karthik Gaur</td></tr>
+</table>
+<p><b>Branching and commit conventions</b> (<code>docs/CONTRIBUTING.md</code>): short-lived <code>feature/</code>, <code>fix/</code>, <code>security/</code>, <code>docs/</code> branches off an always-runnable <code>main</code>; merge only via reviewed PR with green CI; Conventional Commits (<code>feat:</code>, <code>fix(security):</code>, <code>test:</code>, <code>ci:</code>…) referencing backlog/security ids; AI-assisted commits carry a <code>Co-Authored-By</code> trailer naming the model. <b>Changelog and releases:</b> <code>CHANGELOG.md</code>; tagged releases <code>v0.1.0</code> (Milestone 1) and <code>v0.2.0</code> (Milestone 2).</p>
+
+<h3>4.2 Cross-viewport testing</h3>
+<p>The Maestro flow <code>01-signin-checkin-discover</code> was run unchanged on the smallest and largest current iPhones and on the iPhone 17; the full journey (flows 01 + 02) on the iPhone 17. Android was not run this milestone (team decision); the app uses only cross-platform React Native components.</p>
+<div class="shots">
+  <figure><img src="../evidence/screens/iphone-16e/04-people-ranked.png"><figcaption>iPhone 16e (390 × 844 pt) ✓</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/04-people-ranked.png"><figcaption>iPhone 17 (402 × 874 pt) ✓</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17-pro-max/04-people-ranked.png"><figcaption>iPhone 17 Pro Max (440 × 956 pt) ✓</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-16e/01-sign-in.png"><figcaption>iPhone 16e sign-in ✓</figcaption></figure>
+</div>
+
+<h3>4.3 Threat model (main attack surfaces)</h3>
+<p>The phone talks to the database directly with a publishable key that every copy of the app contains, so <b>the database is the trust boundary</b>: any rule that exists only in the UI is not a control. Full STRIDE table: <code>docs/SECURITY.md</code>.</p>
+<table>
+<tr><th>Surface</th><th>Threat</th><th>Before M2</th><th>Control</th></tr>
+<tr><td>pins / profiles reads</td><td>enumerate who is visible at every venue (real-time whereabouts)</td><td class="fail">vulnerable</td><td>SEC-1: same-venue RLS; counts via aggregate RPC</td></tr>
+<tr><td>meet_requests insert</td><td>request arbitrary users from anywhere, incl. hidden people</td><td class="fail">vulnerable</td><td>SEC-2: RLS WITH CHECK on presence + visibility</td></tr>
+<tr><td>profiles update</td><td>store huge names/interest lists shown to others</td><td class="fail">vulnerable</td><td>SEC-3: DB check constraints</td></tr>
+<tr><td>meet_requests reads</td><td>learn who said yes to you</td><td class="pass">mitigated (M1)</td><td>requester-only RLS</td></tr>
+<tr><td>matches / messages</td><td>forge matches, spoof sender, read others' chats, linger</td><td class="pass">mitigated</td><td>trigger-only matches; sender = self; participant RLS; 6 h expiry</td></tr>
+</table>
+
+<h3>4.4 OWASP Top 10 (2021) review</h3>
+<table>
+<tr><th>Category</th><th>Finding</th></tr>
+<tr><td><b>A01 Broken Access Control</b></td><td><b>Two real issues (SEC-1, SEC-2) — fixed.</b> RLS on every table, each rule asserted by an integration test.</td></tr>
+<tr><td>A02 Cryptographic Failures</td><td>Supabase Auth: bcrypt, TLS, JWT. No custom crypto.</td></tr>
+<tr><td>A03 Injection</td><td>PostgREST parameterises queries; no string-built SQL; DB functions pin <code>search_path = ''</code>.</td></tr>
+<tr><td><b>A04 Insecure Design</b></td><td><b>Limits existed only in the UI (SEC-3) — moved into DB constraints.</b></td></tr>
+<tr><td>A05 Security Misconfiguration</td><td>RLS everywhere; purge function's execute revoked from clients; email confirmation off for the demo (documented).</td></tr>
+<tr><td>A06 Vulnerable Components</td><td><code>npm audit</code> reviewed; Expo SDK patches applied; CI installs from the lockfile.</td></tr>
+<tr><td>A07 Identification &amp; Auth</td><td>Supabase sessions; profile-carry-over bug on account switch fixed.</td></tr>
+<tr><td>A08 Integrity · A09 Logging · A10 SSRF</td><td>Lockfile + versioned migrations · Supabase request logs (alerting in M3) · N/A (no server-side fetches).</td></tr>
+</table>
+
+<h3>4.5 Implemented security control — before / after evidence</h3>
+<p>Test-first: the security tests (asserting the <i>secure</i> behaviour) were committed and run <b>before</b> the fix (<code>9d34f1c</code>, log <code>docs/evidence/security-BEFORE.txt</code>), then the migration was applied and the same suite re-run (<code>a46267d</code>, <code>security-AFTER.txt</code>).</p>
+<table>
+<tr><th>Security test</th><th>Before</th><th>After</th></tr>
+<tr><td>SEC-1 outsider cannot list who is checked in at a venue</td><td class="fail">✕ received 2 user ids</td><td class="pass">✓</td></tr>
+<tr><td>SEC-1 outsider cannot read profiles of people at a venue</td><td class="fail">✕</td><td class="pass">✓</td></tr>
+<tr><td>SEC-1 someone at a different venue cannot list this one</td><td class="fail">✕</td><td class="pass">✓</td></tr>
+<tr><td>SEC-1 anyone signed in still gets anonymous counts</td><td class="fail">✕ RPC did not exist</td><td class="pass">✓</td></tr>
+<tr><td>SEC-2 outsider cannot send a meet request</td><td class="fail">✕ accepted</td><td class="pass">✓</td></tr>
+<tr><td>SEC-2 request cannot target a hidden person</td><td class="fail">✕ accepted</td><td class="pass">✓</td></tr>
+<tr><td>SEC-3 rejects a 5,000-character display name</td><td class="fail">✕ accepted</td><td class="pass">✓</td></tr>
+<tr><td>SEC-3 rejects more than 5 interests</td><td class="fail">✕ accepted</td><td class="pass">✓</td></tr>
+<tr><th>Whole integration suite</th><th>8 failed · 15 passed</th><th>23 passed</th></tr>
+</table>
+<p><b>How the TA observes the control:</b> (1) <code>npm run test:integration</code> — SEC-1…3 pass; (2) in the app, open a venue <i>before</i> checking in — counts are visible, identities are not; after checking in visibly at that venue, the people list appears.</p>
+
+<h2 class="pb">5 · Updated setup, run and verification instructions</h2>
+<p>Unchanged prerequisites: macOS with Xcode 16+ (iOS Simulator runtime), Node.js 20+. Full instructions: <code>README.md</code>; click-by-click script with expected results: <code>docs/VERIFICATION.md</code>.</p>
+<pre>git clone git@github.com:Arcce9/BeerChat.git && cd BeerChat && git checkout milestone-2
+cd app && npm install          # dependencies (Expo SDK 57, Jest, Testing Library)
+npm run seed:demo              # sample data: Sam, Priya, Tom checked in at Houndstooth Sports Bar
+npx expo start                 # press i → iOS Simulator (Expo Go installs automatically)
+
+npm run typecheck && npx expo lint
+npm test                       # 54 unit + component tests
+npm run test:coverage          # + coverage report and enforced thresholds
+npm run test:integration       # 23 tests against the live backend
+npm run e2e                    # optional: Maestro UI flows (brew install maestro)</pre>
+<p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> nine ordered files in <code>supabase/migrations/</code>, already applied to the hosted database (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code> and <code>…000009_security_hardening</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
+<table>
+<tr><th>#</th><th>TA checks</th><th>Expected</th></tr>
+<tr><td>1</td><td>Milestone 1 workflow (two simulators, two demo accounts): check in → see each other live → double opt-in → chat → withdraw</td><td>as in M1; still works</td></tr>
+<tr><td>2</td><td>As Alex, open Houndstooth <i>before</i> checking in</td><td>anonymous counts, no identities (security control)</td></tr>
+<tr><td>3</td><td>Check in, go visible, "See who's open to hello"</td><td>Priya and Sam ("2 in common") above Tom (BC-08)</td></tr>
+<tr><td>4</td><td><code>node scripts/seed-demo.mjs sam-says-yes</code>, tap "Open to meet?" on Sam, "Say hi"</td><td>match + chat show "disappears at …", 6 h ahead (BC-10)</td></tr>
+<tr><td>5</td><td>Run the automated test commands above</td><td>all pass</td></tr>
+</table>
+<p class="muted">Free-tier note: the hosted Supabase project pauses after ~1 week idle; if the app shows network errors, allow 2–3 minutes for it to wake, or contact the team.</p>
+
+<h2>6 · Working demonstration (existing + new features)</h2>
+<p>Recorded by the automated E2E flows (<code>app/e2e/</code>) on the iPhone 17 — the same steps a live demo follows:</p>
+<div class="shots">
+  <figure><img src="../evidence/screens/iphone-17/01-sign-in.png"><figcaption>1 Sign in (M1)</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/02-map.png"><figcaption>2 Map, List fallback (M1; top bar fixed in M2)</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/03-venue-sheet-outsider.png"><figcaption>3 Venue sheet, anonymous counts (M2)</figcaption></figure>
+</div>
+<div class="shots">
+  <figure><img src="../evidence/screens/iphone-17/04-people-ranked.png"><figcaption>4 Ranked people (M2 BC-08)</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/05-match.png"><figcaption>5 Double opt-in match (M1) + expiry (M2)</figcaption></figure>
+  <figure><img src="../evidence/screens/iphone-17/06-chat.png"><figcaption>6 Realtime chat (M1) with expiry (M2)</figcaption></figure>
+</div>
+
+<h2>7 · Contribution statements</h2>
+<table>
+<tr><th>Member</th><th>Milestone 2 contribution</th></tr>
+<tr><td><b>Margulan Baizhakyp</b></td><td>Built the Milestone 2 work using a disclosed AI-assisted workflow (Claude Code; commits carry a <code>Co-Authored-By</code> trailer): BC-08 ranking, BC-10 chat expiry, the unit/component/integration/E2E test suites and CI, the SEC-1…3 security fixes with before/after evidence, the QA plan, security, contributing and changelog documents, and this report.</td></tr>
+<tr><td><b>Arda Alici</b></td><td><span class="todo">[To be written by Arda: one or two sentences on his own Milestone 2 contribution.]</span></td></tr>
+<tr><td><b>Karthik Gaur</b></td><td><span class="todo">[To be written by Karthik: one or two sentences on his own Milestone 2 contribution.]</span></td></tr>
+</table>
+
+</body>
+</html>
