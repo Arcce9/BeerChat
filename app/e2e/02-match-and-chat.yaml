@@ -1,0 +1,23 @@
+# E2E (Maestro): continues from 01 on the people list. Run `node scripts/seed-demo.mjs sam-says-yes`
+# first so Sam has (privately) said yes; tapping back creates the match (BC-06, 07, 10).
+appId: host.exp.Exponent
+---
+- assertVisible: "Sam"
+- tapOn:
+    text: "Open to meet\\?"
+    index: 1
+- extendedWaitUntil:
+    visible: "YOU BOTH SAID YES"
+    timeout: 15000
+- assertVisible: "Alex & Sam"
+- assertVisible: "This chat disappears at.*"
+- takeScreenshot: 05-match
+- tapOn: "Say hi"
+- tapOn:
+    id: "message-input"
+- inputText: "Hey! Corner table by the TVs."
+- tapOn: "↑"
+- extendedWaitUntil:
+    visible: "Hey! Corner table by the TVs."
+- assertVisible: "Houndstooth Sports Bar · disappears at.*"
+- takeScreenshot: 06-chat

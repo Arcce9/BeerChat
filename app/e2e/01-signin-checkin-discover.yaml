@@ -1,0 +1,105 @@
+# E2E (Maestro): sign in as demo user 1 → check in at the demo venue → become visible →
+# see people ranked by shared interests (BC-01, 03, 04, 05, 08, 11).
+# Prereq: `npx expo start` running, and `node scripts/seed-demo.mjs setup`.
+appId: host.exp.Exponent
+env:
+  APP_URL: exp://127.0.0.1:8081
+---
+- stopApp
+- openLink: ${APP_URL}
+- extendedWaitUntil:
+    visible: "Open|Continue|Pin the bar.*|List"
+    timeout: 60000
+- repeat:
+    while:
+      visible: "Open in .Expo Go.\\?"
+    times: 4
+    commands:
+      - tapOn: "Open"
+      - waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Continue|Pin the bar.*|List"
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 5000
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- repeat:
+    while:
+      visible: "Toggle performance monitor"
+    times: 3
+    commands:
+      - tapOn:
+          point: "90%,48%"   # the Expo Go developer menu's close (✕) button
+      - waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Pin the bar.*|List"
+    timeout: 30000
+- repeat:
+    while:
+      visible: "Toggle performance monitor"
+    times: 3
+    commands:
+      - tapOn:
+          point: "90%,48%"   # the Expo Go developer menu's close (✕) button
+      - waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "List"
+    commands:
+      - tapOn:
+          id: "sign-out"
+- extendedWaitUntil:
+    visible: "Pin the bar.*"
+    timeout: 30000
+- takeScreenshot: 01-sign-in
+- tapOn:
+    id: "email-input"
+- inputText: "ta.demo1@beerchat.dev"
+- pressKey: Enter   # on small screens the keyboard covers the password field
+- tapOn:
+    id: "password-input"
+- inputText: "BeerChat-M1-demo1"
+- pressKey: Enter   # single-line inputs blur on submit, closing the keyboard
+- tapOn: "Sign in"
+- extendedWaitUntil:
+    visible: "List"
+    timeout: 20000
+- runFlow:
+    when:
+      visible: "Save Password\\?"
+    commands:
+      - tapOn: "Not Now"
+- takeScreenshot: 02-map
+- tapOn: "List"
+- tapOn:
+    id: "venue-row-Houndstooth Sports Bar"
+- extendedWaitUntil:
+    visible: "here now"
+- takeScreenshot: 03-venue-sheet-outsider
+- runFlow:
+    when:
+      visible: "I'm heading there"
+    commands:
+      - tapOn: "I'm heading there"
+- runFlow:
+    when:
+      visible: "I'm here"
+    commands:
+      - tapOn: "I'm here"
+- extendedWaitUntil:
+    visible: "You're here"
+- runFlow:
+    when:
+      notVisible: "See who's open to hello"
+    commands:
+      - tapOn:
+          id: "visibility-switch"
+- tapOn: "See who's open to hello"
+- extendedWaitUntil:
+    visible: ".*people open to hello"
+- assertVisible: "2 in common · here"
+- takeScreenshot: 04-people-ranked

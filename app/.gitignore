@@ -42,3 +42,4 @@ example
 /ios
 /android
 coverage/
+e2e-out/
