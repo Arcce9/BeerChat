@@ -285,14 +285,16 @@ export default function MapHome({ userId }: { userId: string }) {
         ))}
       </MapView>
 
-      <SafeAreaView style={styles.topOverlay} pointerEvents="box-none">
-        <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
-        {/* BC-11: plain-list fallback so check-in works even if the map won't load */}
-        <Pressable style={styles.listToggle} onPress={() => setShowList(true)}>
-          <Text style={styles.listToggleText}>List</Text>
-        </Pressable>
+      <SafeAreaView style={styles.topOverlay} edges={['top']} pointerEvents="box-none">
+        <View style={styles.topBar} pointerEvents="box-none">
+          {/* BC-11: plain-list fallback so check-in works even if the map won't load */}
+          <Pressable style={styles.listToggle} onPress={() => setShowList(true)}>
+            <Text style={styles.listToggleText}>List</Text>
+          </Pressable>
+          <Pressable testID="sign-out" hitSlop={8} onPress={() => supabase.auth.signOut()}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
 
       {showList && (
@@ -302,6 +304,7 @@ export default function MapHome({ userId }: { userId: string }) {
             {venues.map((venue) => (
               <Pressable
                 key={venue.id}
+                testID={`venue-row-${venue.name}`}
                 style={styles.listRow}
                 onPress={() => {
                   setSelected(venue);
@@ -369,6 +372,8 @@ export default function MapHome({ userId }: { userId: string }) {
                   </Text>
                 </View>
                 <Switch
+                  testID="visibility-switch"
+                  accessibilityLabel="Let people here see me"
                   value={pin.discoverable}
                   onValueChange={toggleDiscoverable}
                   trackColor={{ false: colors.border, true: colors.accent }}
@@ -477,17 +482,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    alignItems: 'center',
   },
-  signOut: {
-    position: 'absolute',
-    top: 8,
-    right: 16,
+  // children of an absolutely-positioned SafeAreaView must stay in normal flow to get the
+  // status-bar inset; absolute children ignore padding and end up under the clock/battery
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 4,
   },
   listToggle: {
-    position: 'absolute',
-    top: 4,
-    left: 16,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,

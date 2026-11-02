@@ -108,6 +108,8 @@ function SignInScreen() {
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
             keyboardType="email-address"
+            testID="email-input"
+            accessibilityLabel="Email"
             value={email}
             onChangeText={setEmail}
           />
@@ -118,6 +120,8 @@ function SignInScreen() {
             style={[styles.input, password && styles.inputFilled]}
             placeholderTextColor={colors.textTertiary}
             secureTextEntry
+            testID="password-input"
+            accessibilityLabel="Password"
             value={password}
             onChangeText={setPassword}
           />
@@ -187,6 +191,8 @@ function ProfileSetupScreen({
             style={[styles.input, displayName && styles.inputFilled]}
             placeholderTextColor={colors.textTertiary}
             maxLength={MAX_NAME_LENGTH}
+            testID="name-input"
+            accessibilityLabel="First name"
             value={displayName}
             onChangeText={setDisplayName}
           />

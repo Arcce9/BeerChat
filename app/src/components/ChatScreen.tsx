@@ -137,6 +137,8 @@ export default function ChatScreen({
             value={text}
             onChangeText={setText}
             placeholder="Message"
+            testID="message-input"
+            accessibilityLabel="Message"
             maxLength={MAX_MESSAGE_LENGTH}
             placeholderTextColor={colors.textTertiary}
           />
