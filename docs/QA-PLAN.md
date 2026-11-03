@@ -56,6 +56,6 @@ The Maestro E2E flow `01-signin-checkin-discover.yaml` was run on three iOS scre
 | Suite | Result |
 |---|---|
 | Unit + component (CI) | 54 / 54 pass, coverage 83.7 % statements |
-| Integration (live backend) | 30 / 30 pass |
+| Integration (live backend) | 28 / 30 pass (the 2 SEC-1 follow-up tests fail until migration …000010 is applied to the hosted database) |
 | E2E (Maestro) | 2 / 2 flows pass on iPhone 17; flow 01 passes on 16e and 17 Pro Max |
 | Lint | 0 errors, 2 warnings (`react-hooks/exhaustive-deps` on `buildMatch`, reviewed: intentional — the effects must not resubscribe when the helper's identity changes) |

@@ -61,7 +61,7 @@ The app needs two variables (see `app/.env.example`):
 **`app/.env` is committed on purpose** and points at the team's hosted demo database, so there is nothing to configure — clone and run. The publishable key is safe to ship by design (it is what a released mobile app embeds); every table is protected by Postgres Row Level Security, and no privileged key exists anywhere in this repository.
 
 ### 3. Database migrations and seed data
-Already applied to the hosted demo database — **no action needed**. For reference or for standing up a fresh instance: the complete schema lives in [`supabase/migrations/`](supabase/migrations/) (ten ordered SQL files: profiles → venues/pins + seed venues → presence/RLS → matching → unmatch → chat → matched-profile visibility → **M2:** chat expiry → security hardening → viewer visibility). Against a new Supabase project they are applied with `supabase link && supabase db push`. Seed data (six Tuscaloosa venues) is inserted by migration `…000002_venues_pins.sql`.
+Already applied to the hosted demo database (except `…000010`, the SEC-1 follow-up, which is not yet applied) — **no action needed**. For reference or for standing up a fresh instance: the complete schema lives in [`supabase/migrations/`](supabase/migrations/) (ten ordered SQL files: profiles → venues/pins + seed venues → presence/RLS → matching → unmatch → chat → matched-profile visibility → **M2:** chat expiry → security hardening → viewer visibility). Against a new Supabase project they are applied with `supabase link && supabase db push`. Seed data (six Tuscaloosa venues) is inserted by migration `…000002_venues_pins.sql`.
 
 > ⚠️ **Free-tier note:** Supabase pauses free projects after ~1 week of inactivity. If the app shows network errors on first run, the database may be waking (allow 2–3 minutes) — or contact the team and we will resume it (one click). We check it daily during grading periods.
 
@@ -89,7 +89,7 @@ npm run typecheck          # TypeScript strict
 npx expo lint              # ESLint
 npm test                   # 54 unit + component tests
 npm run test:coverage      # same, with coverage report (app/coverage/index.html) and enforced thresholds
-npm run test:integration   # 30 tests against the live Supabase project (needs network)
+npm run test:integration   # 30 tests against the live Supabase project (needs network; 2 fail until …000010 is applied)
 npm run e2e                # Maestro UI flows (needs `brew install maestro`, Expo running, `npm run seed:demo`)
 ```
 CI runs typecheck, lint and unit tests with coverage on every pull request ([.github/workflows/ci.yml](.github/workflows/ci.yml)).

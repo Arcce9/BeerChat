@@ -100,9 +100,10 @@
 <tr><td>Static</td><td>TypeScript strict, ESLint</td><td>whole app</td><td class="pass">0 type errors, 0 lint errors</td></tr>
 <tr><td>Unit</td><td>Jest</td><td><code>logic.ts</code>: ranking, expiry, validation, pin state machine (32 tests)</td><td class="pass">pass</td></tr>
 <tr><td>Component</td><td>Jest + React Native Testing Library (Supabase mocked)</td><td>MapHome, PeopleHere, MatchScreen, ChatScreen (22 tests)</td><td class="pass">pass</td></tr>
-<tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (30 tests)</td><td class="pass">30 / 30 pass</td></tr>
+<tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (30 tests)</td><td>28 / 30 pass (note below)</td></tr>
 <tr><td>End-to-end UI</td><td>Maestro on iOS Simulator</td><td>full journey through the real UI (2 flows)</td><td class="pass">pass on 3 screen sizes</td></tr>
 </table>
+<p><b>Note:</b> 2 of the 30 integration tests fail on the live database. Both test the SEC-1 follow-up (migration <code>…000010</code>), which is in the repository but not yet applied to the hosted database.</p>
 <p><b>Integration tests for the main user flows</b> (<code>app/__tests__/integration/flows.test.ts</code>) exercise the real system, not mocks: wrong password rejected; signed-out clients see nothing; a visible person appears to someone at the same venue and disappears when hidden; a one-sided request is invisible to its target; the return request creates exactly one match visible to both and to no outsider; clients cannot create matches directly; the match is set to expire 6 h after creation; <b>a message is delivered to the other participant over Realtime</b>; a message cannot be sent under someone else's name; outsiders cannot read the chat; withdrawal dissolves the match and deletes the chat.</p>
 
 <h3>3.2 Coverage report and target</h3>
@@ -126,7 +127,7 @@
 <li>E2E run → "List" and "Sign out" rendered under the iOS status bar and swallowed taps → layout fix.</li>
 <li>E2E on the small iPhone 16e → keyboard covers the password field (documented; <code>returnKeyType="next"</code> planned).</li>
 <li>Integration suite → three security vulnerabilities (§4).</li>
-<li>Code review → SEC-1 could be bypassed with a hidden pin → viewers must be checked in and visible (migration <code>…000010</code>, §4).</li>
+<li>Code review → SEC-1 could be bypassed with a hidden pin → viewers must be checked in and visible (migration <code>…000010</code>, not yet applied to the hosted database; §4).</li>
 <li>CI on the merged code → the first ChatScreen unit test hit Jest's 5 s timeout in 2 of 3 runs → default test timeout raised to 15 s.</li>
 <li>Requirements review → profile setup accepted 1 interest although BC-02 specifies 3–5 → fixed.</li>
 </ul></li>
@@ -192,7 +193,7 @@
 <tr><td>SEC-3 rejects more than 5 interests</td><td class="fail">✕ accepted</td><td class="pass">✓</td></tr>
 <tr><th>Whole integration suite</th><th>8 failed · 15 passed</th><th>23 passed</th></tr>
 </table>
-<p><b>How the TA observes the control:</b> (1) <code>npm run test:integration</code> — SEC-1…3 pass; (2) in the app, open a venue <i>before</i> checking in — counts are visible, identities are not; after checking in visibly at that venue, the people list appears.</p>
+<p><b>How the TA observes the control:</b> (1) <code>npm run test:integration</code> — SEC-1…3 pass, except the two SEC-1 follow-up tests while <code>…000010</code> is not yet applied to the hosted database; (2) in the app, open a venue <i>before</i> checking in — counts are visible, identities are not; after checking in visibly at that venue, the people list appears.</p>
 
 <h2 class="pb">5 · Updated setup, run and verification instructions</h2>
 <p>Unchanged prerequisites: macOS with Xcode 16+ (iOS Simulator runtime), Node.js 20+. Full instructions: <code>README.md</code>; click-by-click script with expected results: <code>docs/VERIFICATION.md</code>.</p>
@@ -206,14 +207,14 @@ npm test                       # 54 unit + component tests
 npm run test:coverage          # + coverage report and enforced thresholds
 npm run test:integration       # 30 tests against the live backend
 npm run e2e                    # optional: Maestro UI flows (brew install maestro)</pre>
-<p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> ten ordered files in <code>supabase/migrations/</code>, already applied to the hosted database (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code>, <code>…000009_security_hardening</code> and <code>…000010_viewer_must_be_visible</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
+<p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> ten ordered files in <code>supabase/migrations/</code>, all applied to the hosted database except <code>…000010</code>, which is not yet applied (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code>, <code>…000009_security_hardening</code> and <code>…000010_viewer_must_be_visible</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
 <table>
 <tr><th>#</th><th>TA checks</th><th>Expected</th></tr>
 <tr><td>1</td><td>Milestone 1 workflow (two simulators, two demo accounts): check in → see each other live → double opt-in → chat → withdraw</td><td>as in M1; still works</td></tr>
 <tr><td>2</td><td>As Alex, open Houndstooth <i>before</i> checking in</td><td>anonymous counts, no identities (security control)</td></tr>
 <tr><td>3</td><td>Check in, go visible, "See who's open to hello"</td><td>Priya and Sam ("2 in common") above Tom (BC-08)</td></tr>
 <tr><td>4</td><td><code>node scripts/seed-demo.mjs sam-says-yes</code>, tap "Open to meet?" on Sam, "Say hi"</td><td>match + chat show "disappears at …", 6 h ahead (BC-10)</td></tr>
-<tr><td>5</td><td>Run the automated test commands above</td><td>all pass</td></tr>
+<tr><td>5</td><td>Run the automated test commands above</td><td>all pass except the 2 SEC-1 follow-up integration tests (note in §3.1)</td></tr>
 </table>
 <p class="muted">Free-tier note: the hosted Supabase project pauses after ~1 week idle; if the app shows network errors, allow 2–3 minutes for it to wake, or contact the team.</p>
 
@@ -231,7 +232,7 @@ npm run e2e                    # optional: Maestro UI flows (brew install maestr
 </div>
 
 <h3>Known limitations at Milestone 2</h3>
-<p>iOS-verified only (Android not run this milestone) · check-in is manual, not geofenced, so a script can still move a visible pin between venues to list who is there (SEC-1 blocks silent viewing, not this) · presence uses Supabase Realtime rather than the planned Socket.io service · BC-08 ranks by exact shared interests, not embeddings · email confirmation disabled for the demo · free-tier database may need 2–3 minutes to wake.</p>
+<p>iOS-verified only (Android not run this milestone) · check-in is manual, not geofenced, so a script can still move a visible pin between venues to list who is there (SEC-1 blocks silent viewing, not this) · migration <code>…000010</code> is not yet applied to the hosted database, so on the live app a hidden pin can still list who is visible at a venue · presence uses Supabase Realtime rather than the planned Socket.io service · BC-08 ranks by exact shared interests, not embeddings · email confirmation disabled for the demo · free-tier database may need 2–3 minutes to wake.</p>
 
 <h2>7 · Contribution statements</h2>
 <table>
