@@ -7,6 +7,7 @@ import { colors } from '@/lib/theme';
 import PeopleHere from '@/components/PeopleHere';
 import MatchScreen from '@/components/MatchScreen';
 import ChatScreen from '@/components/ChatScreen';
+import { msUntil, pinActionFor } from '@/lib/logic';
 
 type Venue = { id: string; name: string; lat: number; lng: number };
 type Pin = {
@@ -16,7 +17,14 @@ type Pin = {
   discoverable: boolean;
 };
 type Counts = { heading: number; arrived: number };
-type MatchRow = { id: string; user_a: string; user_b: string; venue_id: string; created_at: string };
+type MatchRow = {
+  id: string;
+  user_a: string;
+  user_b: string;
+  venue_id: string;
+  created_at: string;
+  expires_at: string;
+};
 type Match = {
   id: string;
   myName: string;
@@ -25,6 +33,7 @@ type Match = {
   theirInterests: string[];
   venueName: string;
   createdAt: string;
+  expiresAt: string;
 };
 
 export default function MapHome({ userId }: { userId: string }) {
@@ -68,19 +77,13 @@ export default function MapHome({ userId }: { userId: string }) {
       .then(({ data }) => setPin(data));
   }, [userId, pinsVersion]);
 
-  // discoverable counts for whichever venue's sheet is open
+  // anonymous counts for whichever venue's sheet is open. Identities are only visible to people
+  // checked in at the same venue (RLS, SEC-1), so counts come from an aggregate-only function.
   useEffect(() => {
     if (!selected) return;
     supabase
-      .from('pins')
-      .select('status')
-      .eq('venue_id', selected.id)
-      .eq('discoverable', true)
-      .then(({ data }) => {
-        const heading = data?.filter((p) => p.status === 'heading').length ?? 0;
-        const arrived = data?.filter((p) => p.status === 'arrived').length ?? 0;
-        setCounts({ heading, arrived });
-      });
+      .rpc('venue_counts', { target_venue: selected.id })
+      .then(({ data }) => setCounts(data?.[0] ?? { heading: 0, arrived: 0 }));
   }, [selected, pinsVersion]);
 
   // live updates: anyone's check-in/leave/visibility change bumps pinsVersion.
@@ -125,6 +128,7 @@ export default function MapHome({ userId }: { userId: string }) {
       theirInterests: them?.interests ?? [],
       venueName: venue?.name ?? '',
       createdAt: row.created_at,
+      expiresAt: row.expires_at,
     };
   };
 
@@ -132,7 +136,7 @@ export default function MapHome({ userId }: { userId: string }) {
   useEffect(() => {
     supabase
       .from('matches')
-      .select('id, user_a, user_b, venue_id, created_at')
+      .select('id, user_a, user_b, venue_id, created_at, expires_at')
       .or(`user_a.eq.${userId},user_b.eq.${userId}`)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -180,6 +184,17 @@ export default function MapHome({ userId }: { userId: string }) {
       supabase.removeChannel(channel);
     };
   }, [userId]);
+
+  // BC-10: expired matches are hidden by RLS on the next fetch; this timer ends an open one live
+  useEffect(() => {
+    if (!match) return;
+    const timer = setTimeout(() => {
+      setMatch(null);
+      setShowMatchScreen(false);
+      setShowChat(false);
+    }, msUntil(match.expiresAt));
+    return () => clearTimeout(timer);
+  }, [match]);
 
   const pinnedVenue = pin ? venues.find((v) => v.id === pin.venue_id) : null;
 
@@ -244,7 +259,8 @@ export default function MapHome({ userId }: { userId: string }) {
     setPin({ ...pin, discoverable: value });
   };
 
-  const ownPinHere = !!pin && !!selected && pin.venue_id === selected.id;
+  const action = selected ? pinActionFor(pin, selected.id) : 'headThere';
+  const ownPinHere = action !== 'headThere';
 
   return (
     <View style={styles.container}>
@@ -269,14 +285,16 @@ export default function MapHome({ userId }: { userId: string }) {
         ))}
       </MapView>
 
-      <SafeAreaView style={styles.topOverlay} pointerEvents="box-none">
-        <Pressable style={styles.signOut} onPress={() => supabase.auth.signOut()}>
-          <Text style={styles.signOutText}>Sign out</Text>
-        </Pressable>
-        {/* BC-11: plain-list fallback so check-in works even if the map won't load */}
-        <Pressable style={styles.listToggle} onPress={() => setShowList(true)}>
-          <Text style={styles.listToggleText}>List</Text>
-        </Pressable>
+      <SafeAreaView style={styles.topOverlay} edges={['top']} pointerEvents="box-none">
+        <View style={styles.topBar} pointerEvents="box-none">
+          {/* BC-11: plain-list fallback so check-in works even if the map won't load */}
+          <Pressable style={styles.listToggle} onPress={() => setShowList(true)}>
+            <Text style={styles.listToggleText}>List</Text>
+          </Pressable>
+          <Pressable testID="sign-out" hitSlop={8} onPress={() => supabase.auth.signOut()}>
+            <Text style={styles.signOutText}>Sign out</Text>
+          </Pressable>
+        </View>
       </SafeAreaView>
 
       {showList && (
@@ -286,6 +304,7 @@ export default function MapHome({ userId }: { userId: string }) {
             {venues.map((venue) => (
               <Pressable
                 key={venue.id}
+                testID={`venue-row-${venue.name}`}
                 style={styles.listRow}
                 onPress={() => {
                   setSelected(venue);
@@ -353,6 +372,8 @@ export default function MapHome({ userId }: { userId: string }) {
                   </Text>
                 </View>
                 <Switch
+                  testID="visibility-switch"
+                  accessibilityLabel="Let people here see me"
                   value={pin.discoverable}
                   onValueChange={toggleDiscoverable}
                   trackColor={{ false: colors.border, true: colors.accent }}
@@ -360,7 +381,7 @@ export default function MapHome({ userId }: { userId: string }) {
                 />
               </View>
 
-              {pin.status === 'heading' ? (
+              {action === 'imHere' ? (
                 <>
                   <Pressable style={styles.button} onPress={imHere} disabled={loading}>
                     <Text style={styles.buttonText}>{loading ? '...' : "I'm here"}</Text>
@@ -443,6 +464,7 @@ export default function MapHome({ userId }: { userId: string }) {
           theirName={match.theirName}
           venueName={match.venueName}
           matchCreatedAt={match.createdAt}
+          expiresAt={match.expiresAt}
           onClose={() => setShowChat(false)}
         />
       )}
@@ -460,17 +482,17 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    alignItems: 'center',
   },
-  signOut: {
-    position: 'absolute',
-    top: 8,
-    right: 16,
+  // children of an absolutely-positioned SafeAreaView must stay in normal flow to get the
+  // status-bar inset; absolute children ignore padding and end up under the clock/battery
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 4,
   },
   listToggle: {
-    position: 'absolute',
-    top: 4,
-    left: 16,
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,

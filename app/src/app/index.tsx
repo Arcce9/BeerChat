@@ -11,6 +11,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
 import MapHome from '@/components/MapHome';
+import { MAX_INTERESTS, MAX_NAME_LENGTH, toggleInterest, validateProfile } from '@/lib/logic';
 
 const INTERESTS = [
   'live music',
@@ -31,7 +32,8 @@ type Profile = { display_name: string; interests: string[] };
 
 export default function Index() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
-  const [profile, setProfile] = useState<Profile | null | undefined>(undefined);
+  // keyed by user id so a previous account's profile can never leak into the next session
+  const [loaded, setLoaded] = useState<{ userId: string; profile: Profile } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -41,18 +43,18 @@ export default function Index() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const userId = session?.user.id;
   useEffect(() => {
-    if (!session) {
-      setProfile(session === null ? null : undefined);
-      return;
-    }
+    if (!userId) return;
     supabase
       .from('profiles')
       .select('display_name, interests')
-      .eq('id', session.user.id)
+      .eq('id', userId)
       .maybeSingle()
-      .then(({ data }) => setProfile(data ?? { display_name: '', interests: [] }));
-  }, [session]);
+      .then(({ data }) => setLoaded({ userId, profile: data ?? { display_name: '', interests: [] } }));
+  }, [userId]);
+
+  const profile = loaded && loaded.userId === userId ? loaded.profile : undefined;
 
   if (session === undefined || (session && profile === undefined)) {
     return <View style={styles.container} />;
@@ -63,7 +65,12 @@ export default function Index() {
   }
 
   if (!profile?.display_name) {
-    return <ProfileSetupScreen userId={session.user.id} onSaved={setProfile} />;
+    return (
+      <ProfileSetupScreen
+        userId={session.user.id}
+        onSaved={(p) => setLoaded({ userId: session.user.id, profile: p })}
+      />
+    );
   }
 
   return <MapHome userId={session.user.id} />;
@@ -101,6 +108,8 @@ function SignInScreen() {
             placeholderTextColor={colors.textTertiary}
             autoCapitalize="none"
             keyboardType="email-address"
+            testID="email-input"
+            accessibilityLabel="Email"
             value={email}
             onChangeText={setEmail}
           />
@@ -111,6 +120,8 @@ function SignInScreen() {
             style={[styles.input, password && styles.inputFilled]}
             placeholderTextColor={colors.textTertiary}
             secureTextEntry
+            testID="password-input"
+            accessibilityLabel="Password"
             value={password}
             onChangeText={setPassword}
           />
@@ -145,24 +156,13 @@ function ProfileSetupScreen({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const toggle = (interest: string) => {
-    setInterests((prev) =>
-      prev.includes(interest)
-        ? prev.filter((i) => i !== interest)
-        : prev.length < 5
-          ? [...prev, interest]
-          : prev
-    );
-  };
+  const toggle = (interest: string) => setInterests((prev) => toggleInterest(prev, interest));
 
   const save = async () => {
     setError('');
-    if (!displayName.trim()) {
-      setError('enter a first name');
-      return;
-    }
-    if (interests.length < 1) {
-      setError('pick at least 1 interest');
+    const invalid = validateProfile(displayName, interests);
+    if (invalid) {
+      setError(invalid);
       return;
     }
     setLoading(true);
@@ -190,6 +190,9 @@ function ProfileSetupScreen({
           <TextInput
             style={[styles.input, displayName && styles.inputFilled]}
             placeholderTextColor={colors.textTertiary}
+            maxLength={MAX_NAME_LENGTH}
+            testID="name-input"
+            accessibilityLabel="First name"
             value={displayName}
             onChangeText={setDisplayName}
           />
@@ -197,7 +200,7 @@ function ProfileSetupScreen({
 
         <View style={styles.interestsHeader}>
           <Text style={styles.sectionTitle}>Pick 3–5 interests</Text>
-          <Text style={styles.counter}>{interests.length} of 5 selected</Text>
+          <Text style={styles.counter}>{interests.length} of {MAX_INTERESTS} selected</Text>
         </View>
         <View style={styles.chipWrap}>
           {INTERESTS.map((interest) => {

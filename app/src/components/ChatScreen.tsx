@@ -12,11 +12,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
+import { MAX_MESSAGE_LENGTH, formatClock, initialOf, validateMessage } from '@/lib/logic';
 
 type Message = { id: string; sender_id: string; text: string; created_at: string };
-
-const formatTime = (iso: string) =>
-  new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
 export default function ChatScreen({
   matchId,
@@ -24,6 +22,7 @@ export default function ChatScreen({
   theirName,
   venueName,
   matchCreatedAt,
+  expiresAt,
   onClose,
 }: {
   matchId: string;
@@ -31,6 +30,7 @@ export default function ChatScreen({
   theirName: string;
   venueName: string;
   matchCreatedAt?: string;
+  expiresAt?: string;
   onClose: () => void;
 }) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -66,13 +66,16 @@ export default function ChatScreen({
   }, [matchId]);
 
   const send = async () => {
-    const trimmed = text.trim();
-    if (!trimmed) return;
+    const result = validateMessage(text);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
     setText('');
     setError('');
     const { error: err } = await supabase
       .from('messages')
-      .insert({ match_id: matchId, sender_id: myId, text: trimmed });
+      .insert({ match_id: matchId, sender_id: myId, text: result.text });
     if (err) setError(err.message);
   };
 
@@ -87,12 +90,12 @@ export default function ChatScreen({
             <Text style={styles.backArrow}>‹</Text>
           </Pressable>
           <View style={styles.initialSquare}>
-            <Text style={styles.initialText}>{theirName.charAt(0).toUpperCase()}</Text>
+            <Text style={styles.initialText}>{initialOf(theirName)}</Text>
           </View>
           <View style={styles.headerTextWrap}>
             <Text style={styles.theirName}>{theirName}</Text>
             <Text style={styles.subline}>
-              {venueName} · disappears when either of you withdraws
+              {venueName} · {expiresAt ? `disappears at ${formatClock(expiresAt)}` : 'disappears when either of you withdraws'}
             </Text>
           </View>
         </View>
@@ -120,7 +123,7 @@ export default function ChatScreen({
               <View style={styles.matchedPillWrap}>
                 <View style={styles.matchedPill}>
                   <Text style={styles.matchedPillText}>
-                    You matched at {formatTime(matchCreatedAt)}
+                    You matched at {formatClock(matchCreatedAt)}
                   </Text>
                 </View>
               </View>
@@ -134,6 +137,9 @@ export default function ChatScreen({
             value={text}
             onChangeText={setText}
             placeholder="Message"
+            testID="message-input"
+            accessibilityLabel="Message"
+            maxLength={MAX_MESSAGE_LENGTH}
             placeholderTextColor={colors.textTertiary}
           />
           <Pressable

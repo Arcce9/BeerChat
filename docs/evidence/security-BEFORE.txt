@@ -1,0 +1,220 @@
+# BEFORE security migration 20261101000009 — recorded 2026-11-01 23:56 UTC against the live Supabase project
+# Command: npm run test:integration
+
+Running one project: integration
+FAIL integration __tests__/integration/security.test.ts
+  SEC-1 (OWASP A01) presence enumeration
+    ✕ an outsider cannot list who is checked in at a venue (147 ms)
+    ✕ an outsider cannot read the profiles of people at a venue (66 ms)
+    ✕ someone checked in at a different venue cannot list this one (133 ms)
+    ✕ anyone signed in can still see anonymous counts for a venue (57 ms)
+  SEC-2 (OWASP A01) unauthorized meet requests
+    ✕ an outsider cannot send a meet request to someone at a venue (211 ms)
+    ✕ a request cannot target someone who is hidden (311 ms)
+    ✓ a legitimate request between two visible people at the venue still works (165 ms)
+  SEC-3 (OWASP A04/A03) server-side input validation
+    ✕ rejects an oversized display name (56 ms)
+    ✕ rejects more than 5 interests (61 ms)
+    ✓ accepts a normal profile update (56 ms)
+
+  ● SEC-1 (OWASP A01) presence enumeration › an outsider cannot list who is checked in at a venue
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 8
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "user_id": "83181e45-294a-4c49-b05d-c18ea5a98036",
+    +   },
+    +   Object {
+    +     "user_id": "3ac1d5a7-6e0d-4300-8595-c75711425cb4",
+    +   },
+    + ]
+
+      33 |   it('an outsider cannot list who is checked in at a venue', async () => {
+      34 |     const { data } = await C.client.from('pins').select('user_id').eq('venue_id', venueId);
+    > 35 |     expect(data).toEqual([]);
+         |                  ^
+      36 |   });
+      37 |
+      38 |   it('an outsider cannot read the profiles of people at a venue', async () => {
+
+      at Object.toEqual (__tests__/integration/security.test.ts:35:18)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-1 (OWASP A01) presence enumeration › an outsider cannot read the profiles of people at a venue
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 5
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "display_name": "IntAlice",
+    +   },
+    + ]
+
+      38 |   it('an outsider cannot read the profiles of people at a venue', async () => {
+      39 |     const { data } = await C.client.from('profiles').select('display_name').eq('id', A.id);
+    > 40 |     expect(data).toEqual([]);
+         |                  ^
+      41 |   });
+      42 |
+      43 |   it('someone checked in at a different venue cannot list this one', async () => {
+
+      at Object.toEqual (__tests__/integration/security.test.ts:40:18)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-1 (OWASP A01) presence enumeration › someone checked in at a different venue cannot list this one
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 8
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "user_id": "83181e45-294a-4c49-b05d-c18ea5a98036",
+    +   },
+    +   Object {
+    +     "user_id": "3ac1d5a7-6e0d-4300-8595-c75711425cb4",
+    +   },
+    + ]
+
+      44 |     await checkIn(C, otherVenueId, true);
+      45 |     const { data } = await C.client.from('pins').select('user_id').eq('venue_id', venueId);
+    > 46 |     expect(data).toEqual([]);
+         |                  ^
+      47 |     await C.client.from('pins').delete().eq('user_id', C.id);
+      48 |   });
+      49 |
+
+      at Object.toEqual (__tests__/integration/security.test.ts:46:18)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-1 (OWASP A01) presence enumeration › anyone signed in can still see anonymous counts for a venue
+
+    expect(received).toBeNull()
+
+    Received: {"code": "PGRST202", "details": "Searched for the function public.venue_counts with parameter target_venue or with a single unnamed json/jsonb parameter, but no matches were found in the schema cache.", "hint": null, "message": "Could not find the function public.venue_counts(target_venue) in the schema cache"}
+
+      50 |   it('anyone signed in can still see anonymous counts for a venue', async () => {
+      51 |     const { data, error } = await C.client.rpc('venue_counts', { target_venue: venueId });
+    > 52 |     expect(error).toBeNull();
+         |                   ^
+      53 |     expect(data).toEqual([{ heading: 0, arrived: 2 }]);
+      54 |   });
+      55 | });
+
+      at Object.toBeNull (__tests__/integration/security.test.ts:52:19)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-2 (OWASP A01) unauthorized meet requests › an outsider cannot send a meet request to someone at a venue
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+      65 |       .from('meet_requests')
+      66 |       .insert({ requester_id: C.id, target_id: A.id, venue_id: venueId });
+    > 67 |     expect(error).not.toBeNull();
+         |                       ^
+      68 |   });
+      69 |
+      70 |   it('a request cannot target someone who is hidden', async () => {
+
+      at Object.toBeNull (__tests__/integration/security.test.ts:67:23)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-2 (OWASP A01) unauthorized meet requests › a request cannot target someone who is hidden
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+      74 |       .insert({ requester_id: A.id, target_id: B.id, venue_id: venueId });
+      75 |     await B.client.from('pins').update({ discoverable: true }).eq('user_id', B.id);
+    > 76 |     expect(error).not.toBeNull();
+         |                       ^
+      77 |   });
+      78 |
+      79 |   it('a legitimate request between two visible people at the venue still works', async () => {
+
+      at Object.toBeNull (__tests__/integration/security.test.ts:76:23)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-3 (OWASP A04/A03) server-side input validation › rejects an oversized display name
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+      88 |   it('rejects an oversized display name', async () => {
+      89 |     const { error } = await A.client.from('profiles').update({ display_name: 'x'.repeat(5000) }).eq('id', A.id);
+    > 90 |     expect(error).not.toBeNull();
+         |                       ^
+      91 |   });
+      92 |
+      93 |   it('rejects more than 5 interests', async () => {
+
+      at Object.toBeNull (__tests__/integration/security.test.ts:90:23)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-3 (OWASP A04/A03) server-side input validation › rejects more than 5 interests
+
+    expect(received).not.toBeNull()
+
+    Received: null
+
+       96 |       .update({ interests: ['a', 'b', 'c', 'd', 'e', 'f'] })
+       97 |       .eq('id', A.id);
+    >  98 |     expect(error).not.toBeNull();
+          |                       ^
+       99 |   });
+      100 |
+      101 |   it('accepts a normal profile update', async () => {
+
+      at Object.toBeNull (__tests__/integration/security.test.ts:98:23)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS integration __tests__/integration/flows.test.ts (5.906 s)
+  Auth
+    ✓ rejects a wrong password (135 ms)
+    ✓ gives signed-out clients no access to user data (116 ms)
+  Presence (BC-04/05)
+    ✓ shows a visible person to someone checked in at the same venue (55 ms)
+    ✓ hides a person the moment they turn visibility off (195 ms)
+  Double opt-in matching (BC-06)
+    ✓ keeps a one-sided request invisible to its target (183 ms)
+    ✓ creates exactly one match, visible to both, when the request is returned (173 ms)
+    ✓ does not let an outsider see the match (53 ms)
+    ✓ refuses to let a client create matches directly (57 ms)
+  Chat (BC-07) and expiry (BC-10)
+    ✓ sets the match to expire 6 hours after it was made (57 ms)
+    ✓ delivers a message to the other participant in real time (2258 ms)
+    ✓ rejects a message sent under someone else's name (59 ms)
+    ✓ keeps the conversation private from outsiders (67 ms)
+    ✓ dissolves the match and deletes the chat when either side withdraws (244 ms)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       8 failed, 15 passed, 23 total
+Snapshots:   0 total
+Time:        9.442 s, estimated 11 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

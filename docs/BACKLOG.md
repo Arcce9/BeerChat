@@ -19,9 +19,9 @@ Points are relative size (1, 2, 3, 5), not hours.
 | BC-05 | As a user, I want to see who else is checked in at the same venue, so that I know who is around right now. | P0 | 3 | 1 | **Done (M1)** |
 | BC-06 | As a user, I want connections to require both people to agree so that I am not bothered by unwanted messages. | P0 | 5 | 1 | **Done (M1)** |
 | BC-07 | As a matched user, I want a live 1-on-1 chat, so that we can work out where to find each other. | P0 | 5 | 1 | **Done (M1)** |
-| BC-08 | As a user, I want the people at my venue sorted by how much our interests overlap, so that the most relevant ones show up first. | P1 | 5 | 2 | Backlog |
-| BC-09 | As a user, I want the "who is here" list to update within about half a second, so that I'm not looking at stale information. | P1 | 5 | 2 | Backlog |
-| BC-10 | As a user, I want my chats to disappear a while after the meetup, so that nothing I said is sitting around later. | P1 | 2 | 2 | Backlog |
+| BC-08 | As a user, I want the people at my venue sorted by how much our interests overlap, so that the most relevant ones show up first. | P1 | 5 | 2 | **Done (M2)** |
+| BC-09 | As a user, I want the "who is here" list to update within about half a second, so that I'm not looking at stale information. | P1 | 5 | 3 | Moved to M3 (needs the deployed Socket.io server; presence currently updates via Supabase Realtime) |
+| BC-10 | As a user, I want my chats to disappear a while after the meetup, so that nothing I said is sitting around later. | P1 | 2 | 2 | **Done (M2)** |
 | BC-11 | As a user, I want a plain list of venues as a fallback, so that I can still check in if the map won't load. | P1 | 1 | 1 | **Done (M1)** |
 
 ## Acceptance criteria (from the proposal)
@@ -39,10 +39,10 @@ These are not user stories, just work that has to happen. Listed so it doesn't g
 | T-02 | Supabase project, schema for the five tables, auth turned on | 1 | Karthik: auth + profiles · Arda: presence + matching · Margulan: chat (done) |
 | T-03 | Seed venue list for the map | 1 | Karthik (done) |
 | T-04 | Row level security so users can only read the rows they should | 2 | Arda + Margulan (done — pulled into M1: RLS is the privacy mechanism for presence and matching) |
-| T-05 | Node + Socket.io presence server | 2 | tbd |
-| T-06 | Embedding pipeline: interest tags to OpenAI to pgvector, plus the ranking query | 2 | Karthik |
-| T-07 | Automated tests for matching and chat | 2 | Karthik |
-| T-08 | CI that runs the tests on every PR | 3 | Karthik |
+| T-05 | Node + Socket.io presence server | 3 | Moved to M3 (deployment milestone) |
+| T-06 | Embedding pipeline: interest tags to OpenAI to pgvector, plus the ranking query | 3 | Moved to M3; BC-08 ships with exact shared-interest ranking |
+| T-07 | Automated tests for matching and chat | 2 | Done (M2): unit, integration, E2E suites |
+| T-08 | CI that runs the tests on every PR | 3 | Done early (M2): GitHub Actions |
 | T-09 | Hosted deployment for the presence server | 3 | Margulan |
 | T-10 | Demo video and final docs | 3 | everyone |
 

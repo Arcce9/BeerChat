@@ -3,12 +3,7 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 import { colors } from '@/lib/theme';
-
-type Person = {
-  user_id: string;
-  status: 'heading' | 'arrived';
-  profiles: { display_name: string; interests: string[] } | null;
-};
+import { rankBySharedInterests, type Person } from '@/lib/logic';
 
 export default function PeopleHere({
   venueId,
@@ -24,6 +19,7 @@ export default function PeopleHere({
   onClose: () => void;
 }) {
   const [people, setPeople] = useState<Person[]>([]);
+  const [myInterests, setMyInterests] = useState<string[]>([]);
   const [requested, setRequested] = useState<Set<string>>(new Set());
   const [actionError, setActionError] = useState('');
 
@@ -36,6 +32,15 @@ export default function PeopleHere({
       .neq('user_id', userId)
       .then(({ data }) => setPeople((data as unknown as Person[]) ?? []));
   }, [venueId, userId, refreshKey]);
+
+  useEffect(() => {
+    supabase
+      .from('profiles')
+      .select('interests')
+      .eq('id', userId)
+      .maybeSingle()
+      .then(({ data }) => setMyInterests(data?.interests ?? []));
+  }, [userId]);
 
   useEffect(() => {
     supabase
@@ -88,7 +93,7 @@ export default function PeopleHere({
         </Text>
         {actionError ? <Text style={styles.error}>{actionError}</Text> : null}
         <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
-          {people.map((person) => {
+          {rankBySharedInterests(myInterests, people).map(({ person, shared }) => {
             const name = person.profiles?.display_name ?? 'Someone';
             const isRequested = requested.has(person.user_id);
             return (
@@ -96,13 +101,16 @@ export default function PeopleHere({
                 <View style={styles.cardTopRow}>
                   <Text style={styles.name}>{name}</Text>
                   <Text style={styles.statusLabel}>
+                    {shared > 0 ? `${shared} in common · ` : ''}
                     {person.status === 'arrived' ? 'here' : 'heading over'}
                   </Text>
                 </View>
                 <View style={styles.tagRow}>
                   {(person.profiles?.interests ?? []).map((tag) => (
-                    <View key={tag} style={styles.tag}>
-                      <Text style={styles.tagText}>{tag}</Text>
+                    <View key={tag} style={[styles.tag, myInterests.includes(tag) && styles.tagShared]}>
+                      <Text style={[styles.tagText, myInterests.includes(tag) && styles.tagTextShared]}>
+                        {tag}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -205,6 +213,12 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
+  },
+  tagShared: {
+    backgroundColor: colors.accent,
+  },
+  tagTextShared: {
+    color: colors.onAccent,
   },
   tagText: {
     color: colors.accent,

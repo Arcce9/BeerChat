@@ -1,4 +1,4 @@
-# Milestone 1 — TA Verification Guide
+# TA Verification Guide (Milestones 1 + 2)
 
 Prerequisites, install, and demo-account credentials are in the root [README](../README.md). This is the click-by-click script with expected results. Total time ≈ 10 minutes.
 
@@ -27,5 +27,25 @@ Prerequisites, install, and demo-account credentials are in the root [README](..
 ## Known limitations (Milestone 1)
 - iOS is the verified platform (Android planned; nothing used is iOS-only except the Apple Maps tiles — `react-native-maps` falls back to Google tiles on Android).
 - Check-in is a manual button, not geofenced (planned M2).
-- Time-based chat expiry (the "2 AM rule") is designed but not yet implemented; chat deletion currently happens on match withdrawal.
+- ~~Time-based chat expiry~~ — implemented in M2 (6 hours after the match).
 - If the hosted free-tier database was paused by inactivity, the first request may take 2–3 minutes while it wakes.
+
+
+---
+
+## Milestone 2 additions (≈ 10 minutes)
+
+**Setup:** `cd app && npm run seed:demo` (checks Sam, Priya and Tom in, visible, at Houndstooth Sports Bar), then `npx expo start`, press `i`, sign in as `ta.demo1@beerchat.dev` / `BeerChat-M1-demo1`.
+
+| # | Do | Expect | Verifies |
+|---|---|---|---|
+| M2-1 | Tap **List** → **Houndstooth Sports Bar** *before* checking in | Sheet shows anonymous counts (e.g. "3 here now") but no way to see who — identities are only visible to people checked in there | SEC-1 security control |
+| M2-2 | **I'm heading there** → **I'm here** → toggle **Let people here see me** → **See who's open to hello** | Priya and Sam first ("2 in common · here", shared tags filled amber), Tom last | BC-08 |
+| M2-3 | In a terminal: `node scripts/seed-demo.mjs sam-says-yes`; then tap **Open to meet?** on Sam | "YOU BOTH SAID YES" with "This chat disappears at <time>" (6 h after now) | BC-06, BC-10 |
+| M2-4 | **Say hi**, send a message | Chat header shows "Houndstooth Sports Bar · disappears at <time>" | BC-07, BC-10 |
+| M2-5 | `npm test` and `npm run test:coverage` | 54 passed; coverage ≈ 84 % statements, thresholds met | unit/component tests |
+| M2-6 | `npm run test:integration` | 23 passed, including `SEC-1`, `SEC-2`, `SEC-3` | integration + security |
+| M2-7 | *(optional)* `brew install maestro`, then `npm run e2e` with the simulator open | Both flows pass | end-to-end UI |
+| M2-8 | Reset afterwards: `node scripts/seed-demo.mjs clear` | Demo people leave the venue | — |
+
+Recorded runs of all of the above: [`evidence/`](evidence/) (security before/after logs, screenshots on iPhone 16e / 17 / 17 Pro Max).
