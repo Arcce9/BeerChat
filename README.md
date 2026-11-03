@@ -132,7 +132,7 @@ Short version — the full script with expected results is in [docs/VERIFICATION
 
 ## Team & Milestone 2 Contributions
 - **Margulan Baizhakyp** (mbaizhakyp@crimson.ua.edu): Built the Milestone 2 work using a disclosed AI-assisted workflow (Claude Code; commits carry a `Co-Authored-By` trailer): BC-08 ranking, BC-10 chat expiry, the unit/component/integration/E2E test suites and CI, the SEC-1…3 security fixes with before/after evidence, the QA plan, security, contributing and changelog documents, and the Milestone 2 report.
-- **Arda Alici** (aalici@crimson.ua.edu): _To be written by Arda — one or two sentences on his own Milestone 2 contribution (e.g. code review of the M2 pull requests)._
+- **Arda Alici** (aalici@crimson.ua.edu): Worked with Margulan Baizhakyp on the E2E flows, CI, documentation and report, and merged PRs #1–3 into `main`. With AI assistance (Claude Code), reviewed the Milestone 2 code, found that SEC-1 could be bypassed with a hidden pin, and wrote the fix (migration `…000010`) with regression tests, added a CI timeout and forced exit for the integration tests, added five more access-rule tests, and completed the Milestone 2 bug log.
 - **Karthik Gaur** (kgaur@crimson.ua.edu): _To be written by Karthik — one or two sentences on his own Milestone 2 contribution._
 
 Per-milestone contributions are tracked with git tags (`git shortlog -sn milestone-1..milestone-2`).
