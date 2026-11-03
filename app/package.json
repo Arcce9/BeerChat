@@ -50,8 +50,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest --selectProjects unit",
     "test:coverage": "jest --selectProjects unit --coverage",
-    "test:integration": "jest --selectProjects integration --runInBand",
-    "test:all": "jest --runInBand --coverage",
+    "test:integration": "jest --selectProjects integration --runInBand --forceExit",
+    "test:all": "jest --runInBand --coverage --forceExit",
     "seed:demo": "node scripts/seed-demo.mjs setup",
     "e2e": "maestro test e2e/01-signin-checkin-discover.yaml && node scripts/seed-demo.mjs sam-says-yes && maestro test e2e/02-match-and-chat.yaml"
   },
