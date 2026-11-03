@@ -14,7 +14,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com/); ve
 - Docs: QA plan, security (threat model, OWASP review, evidence), contributing guide, this changelog.
 
 ### Security
-- **SEC-1 (OWASP A01):** any signed-in user could list visible people at every venue → now only people checked in at the same venue.
+- **SEC-1 (OWASP A01):** any signed-in user could list visible people at every venue → now only people checked in and visible at the same venue.
 - **SEC-2 (OWASP A01):** meet requests could target anyone from anywhere → requester must be present and visible, target visible.
 - **SEC-3 (OWASP A04):** no server-side limits on names/interests → database constraints.
 

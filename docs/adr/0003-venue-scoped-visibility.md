@@ -6,9 +6,9 @@
 In Milestone 1 the RLS rule for presence was "others' pins and profiles are readable when `discoverable = true`". The UI only showed the people list to someone checked in at the venue, but the API enforced no such condition: any signed-in user could list visible people — with names and interests — at every venue at once. That is real-time whereabouts, the most sensitive data the app holds (threat T1 in [SECURITY.md](../SECURITY.md)). The venue sheet's "heading there / here now" counts were computed by the client from those same rows, so simply tightening the rule would have zeroed the counts for anyone deciding where to go.
 
 ## Decision
-- Others' pins and profiles are readable only by a viewer **pinned at the same venue** (`viewer_venue()` helper, `SECURITY DEFINER` to avoid RLS recursion on `pins`).
+- Others' pins and profiles are readable only by a viewer **checked in and visible at the same venue**, tightened in migration `…000010` (a hidden pin was enough before) (`viewer_venue()` helper, `SECURITY DEFINER` to avoid RLS recursion on `pins`).
 - Counts move to `venue_counts(target_venue)`, a `SECURITY DEFINER` function that returns two integers and no identities, executable by signed-in users only.
-- Meet requests require both parties to be at the venue and the target to be visible (SEC-2), so the matching rules match the visibility rules.
+- Meet requests require the requester to be checked in and visible at the venue and the target to be visible there (SEC-2), so the matching rules match the visibility rules.
 
 ## Consequences
 - **(+)** The privacy promise in the UI copy ("Let people **here** see me") is now enforced by the database.

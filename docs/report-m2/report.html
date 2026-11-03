@@ -80,7 +80,7 @@
 
 <h3>2.2 Design changes since Milestone 1</h3>
 <ul>
-<li><b>API contract</b> (M1 §5.3 table): others' <code>pins</code>/<code>profiles</code> are now readable only by viewers pinned at the same venue; venue counts come from the new <code>venue_counts()</code> RPC; <code>meet_requests</code> inserts require both parties present and the target visible; <code>matches</code>/<code>messages</code> readable only until <code>expires_at</code>. Recorded as <b>ADR-0003</b> (<code>docs/adr/0003-venue-scoped-visibility.md</code>).</li>
+<li><b>API contract</b> (M1 §5.3 table): others' <code>pins</code>/<code>profiles</code> are now readable only by viewers checked in and visible at the same venue; venue counts come from the new <code>venue_counts()</code> RPC; <code>meet_requests</code> inserts require the requester to be checked in and visible at the venue and the target to be visible there; <code>matches</code>/<code>messages</code> readable only until <code>expires_at</code>. Recorded as <b>ADR-0003</b> (<code>docs/adr/0003-venue-scoped-visibility.md</code>).</li>
 <li><b>Data model</b> (M1 Fig. 2): <code>MATCH</code> gains <code>expires_at</code>; <code>PROFILE</code> gains length/count constraints. Entities and relationships are otherwise unchanged.</li>
 <li><b>Modules</b> (M1 §5.3): new <code>lib/logic.ts</code> (pure, unit-tested logic used by the screens); the boundary rule "only MapHome owns realtime subscriptions and mutation state" still holds.</li>
 <li><b>Process</b> (M1 §3): the same incremental, feature-gated model, now with pull requests, CI and the QA checklist added to the Definition of Done (<code>docs/QA-PLAN.md</code> §4).</li>
@@ -203,7 +203,7 @@ npm test                       # 54 unit + component tests
 npm run test:coverage          # + coverage report and enforced thresholds
 npm run test:integration       # 23 tests against the live backend
 npm run e2e                    # optional: Maestro UI flows (brew install maestro)</pre>
-<p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> nine ordered files in <code>supabase/migrations/</code>, already applied to the hosted database (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code> and <code>…000009_security_hardening</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
+<p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> ten ordered files in <code>supabase/migrations/</code>, already applied to the hosted database (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code>, <code>…000009_security_hardening</code> and <code>…000010_viewer_must_be_visible</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
 <table>
 <tr><th>#</th><th>TA checks</th><th>Expected</th></tr>
 <tr><td>1</td><td>Milestone 1 workflow (two simulators, two demo accounts): check in → see each other live → double opt-in → chat → withdraw</td><td>as in M1; still works</td></tr>
@@ -228,7 +228,7 @@ npm run e2e                    # optional: Maestro UI flows (brew install maestr
 </div>
 
 <h3>Known limitations at Milestone 2</h3>
-<p>iOS-verified only (Android not run this milestone) · check-in is manual, not geofenced · presence uses Supabase Realtime rather than the planned Socket.io service · BC-08 ranks by exact shared interests, not embeddings · email confirmation disabled for the demo · free-tier database may need 2–3 minutes to wake.</p>
+<p>iOS-verified only (Android not run this milestone) · check-in is manual, not geofenced, so a script can still move a visible pin between venues to list who is there (SEC-1 blocks silent viewing, not this) · presence uses Supabase Realtime rather than the planned Socket.io service · BC-08 ranks by exact shared interests, not embeddings · email confirmation disabled for the demo · free-tier database may need 2–3 minutes to wake.</p>
 
 <h2>7 · Contribution statements</h2>
 <table>

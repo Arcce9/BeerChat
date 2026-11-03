@@ -24,7 +24,7 @@ Threat model, OWASP Top 10 review, implemented controls, and before/after eviden
 
 | # | Surface | Threat (STRIDE) | Before M2 | Control |
 |---|---|---|---|---|
-| T1 | `pins` / `profiles` reads | **Information disclosure** — enumerate who is visible at every venue, from anywhere | **Vulnerable** (SEC-1) | RLS: visible only to viewers pinned at the same venue; counts via aggregate-only RPC |
+| T1 | `pins` / `profiles` reads | **Information disclosure** — enumerate who is visible at every venue, from anywhere | **Vulnerable** (SEC-1) | RLS: visible only to viewers checked in and visible at the same venue (residual risk in §7); counts via aggregate-only RPC |
 | T2 | `meet_requests` insert | **Elevation / abuse** — send requests to arbitrary user ids, from anywhere, to hidden people | **Vulnerable** (SEC-2) | RLS `WITH CHECK`: requester arrived+visible at the venue, target visible there |
 | T3 | `profiles` update | **Tampering / DoS** — store megabyte names or huge interest lists shown to others | **Vulnerable** (SEC-3) | DB check constraints (name ≤ 30 chars, ≤ 5 interests, ≤ 200 chars total) |
 | T4 | `meet_requests` reads | Information disclosure — learn who said yes to you | Mitigated (M1) | RLS: only the requester can read a request |
@@ -52,9 +52,9 @@ Threat model, OWASP Top 10 review, implemented controls, and before/after eviden
 
 ## 4. Implemented security controls (M2)
 
-All in [`supabase/migrations/20261101000009_security_hardening.sql`](../supabase/migrations/20261101000009_security_hardening.sql):
+In [`supabase/migrations/20261101000009_security_hardening.sql`](../supabase/migrations/20261101000009_security_hardening.sql), with the SEC-1 viewer rule tightened in [`20261102000010_viewer_must_be_visible.sql`](../supabase/migrations/20261102000010_viewer_must_be_visible.sql):
 
-- **SEC-1 — same-venue visibility.** `pins`/`profiles` SELECT policies require the viewer to be pinned at the same venue (`viewer_venue()` is a `SECURITY DEFINER` helper so the `pins` policy doesn't recurse into itself). The venue sheet's counts move to `venue_counts()`, which returns numbers only.
+- **SEC-1 — same-venue visibility.** `pins`/`profiles` SELECT policies require the viewer to be checked in and visible at the same venue (`viewer_venue()` is a `SECURITY DEFINER` helper so the `pins` policy doesn't recurse into itself). The venue sheet's counts move to `venue_counts()`, which returns numbers only.
 - **SEC-2 — request authorization.** `meet_requests` INSERT requires the requester to be *arrived and visible* at the venue and the target to be visible there.
 - **SEC-3 — server-side input validation.** Check constraints on name length, interest count and total interest size (`NOT VALID` so legacy rows don't block the migration; all new writes are checked).
 - **BC-10 hardening** (migration `…000008`): expired matches and their messages become unreadable and unwritable immediately; a pg_cron job purges them every 15 minutes.
@@ -80,9 +80,9 @@ Full runner output: [`evidence/security-BEFORE.txt`](evidence/security-BEFORE.tx
 
 1. **Automated:** `cd app && npm run test:integration` — the `SEC-1…3` tests pass.
 2. **In the app:** sign in as demo user 1 *without* checking in, open Houndstooth Sports Bar: the sheet shows counts ("3 here now") but there is no way to see who; after **I'm here** + **Let people here see me**, the people list appears.
-3. **Directly against the API** (what an attacker would do): with the publishable key, sign in and `GET /rest/v1/pins?select=user_id` → returns only your own pin unless you are checked in at that venue.
+3. **Directly against the API** (what an attacker would do): with the publishable key, sign in and `GET /rest/v1/pins?select=user_id` → returns only your own pin unless you are checked in and visible at that venue.
 
 ## 7. Known residual risks (tracked for M3)
-- Check-in is self-declared (no geofence), so someone can claim to be at a venue. Mitigation candidates: geofence check at check-in, rate-limit pin changes.
+- Check-in is self-declared (no geofence) and each client writes its own pin. A script can therefore still move its pin between venues, appearing at each one as checked in and visible, and list who is visible there. SEC-1 blocks silent viewing, not this. Mitigation candidates: geofence check at check-in, rate-limit pin changes.
 - Email confirmation disabled for the demo; password minimum is Supabase's default.
 - No abuse reporting/blocking yet.

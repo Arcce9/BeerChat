@@ -61,7 +61,7 @@ The app needs two variables (see `app/.env.example`):
 **`app/.env` is committed on purpose** and points at the team's hosted demo database, so there is nothing to configure — clone and run. The publishable key is safe to ship by design (it is what a released mobile app embeds); every table is protected by Postgres Row Level Security, and no privileged key exists anywhere in this repository.
 
 ### 3. Database migrations and seed data
-Already applied to the hosted demo database — **no action needed**. For reference or for standing up a fresh instance: the complete schema lives in [`supabase/migrations/`](supabase/migrations/) (nine ordered SQL files: profiles → venues/pins + seed venues → presence/RLS → matching → unmatch → chat → matched-profile visibility → **M2:** chat expiry → security hardening). Against a new Supabase project they are applied with `supabase link && supabase db push`. Seed data (six Tuscaloosa venues) is inserted by migration `…000002_venues_pins.sql`.
+Already applied to the hosted demo database — **no action needed**. For reference or for standing up a fresh instance: the complete schema lives in [`supabase/migrations/`](supabase/migrations/) (ten ordered SQL files: profiles → venues/pins + seed venues → presence/RLS → matching → unmatch → chat → matched-profile visibility → **M2:** chat expiry → security hardening → viewer visibility). Against a new Supabase project they are applied with `supabase link && supabase db push`. Seed data (six Tuscaloosa venues) is inserted by migration `…000002_venues_pins.sql`.
 
 > ⚠️ **Free-tier note:** Supabase pauses free projects after ~1 week of inactivity. If the app shows network errors on first run, the database may be waking (allow 2–3 minutes) — or contact the team and we will resume it (one click). We check it daily during grading periods.
 
@@ -123,7 +123,7 @@ Short version — the full script with expected results is in [docs/VERIFICATION
 - **Double Opt-In Required:** a one-sided "open to meet" is readable *only* by its sender; the match is created by a database trigger that alone can see both sides.
 - **Consent is ongoing:** withdrawing interest dissolves the match and its messages for both people, live.
 - **Ephemeral messaging:** chats die with the match, and every match expires 6 hours after it is made.
-- **Presence is venue-scoped:** only people checked in at the same venue can see who is there; everyone else sees anonymous counts (SEC-1).
+- **Presence is venue-scoped:** only people checked in and visible at the same venue can see who is there; everyone else sees anonymous counts (SEC-1).
 
 ## Team & Milestone 1 Contributions
 - **Karthik Gaur** (kgaur@crimson.ua.edu): Built Steps 0–2 — the Expo/TypeScript scaffold and simulator setup, the Supabase client, sign-in/sign-up and profile-setup screens with the profiles migration, and the map home with seeded venues and "heading there" pins; maintains the prioritized backlog and use cases.
