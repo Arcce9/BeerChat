@@ -39,7 +39,7 @@ Threat model, OWASP Top 10 review, implemented controls, and before/after eviden
 
 | Category | Relevance to BeerChat | Status |
 |---|---|---|
-| **A01 Broken Access Control** | The central risk: the client is untrusted. | **Two real issues found and fixed (SEC-1, SEC-2).** All tables have RLS; integration tests assert each rule. |
+| **A01 Broken Access Control** | The central risk: the client is untrusted. | **Two real issues found and fixed (SEC-1, SEC-2).** All tables have RLS; integration tests assert the access rules. Hiding chats at expiry and the purge job need time to pass, so no automated test covers them yet. |
 | A02 Cryptographic Failures | Passwords, transport. | Supabase: bcrypt hashes, TLS everywhere, JWT sessions. No custom crypto. |
 | A03 Injection | SQL via API parameters. | PostgREST parameterises all queries; no string-built SQL in the app. Trigger/RPC functions use `search_path = ''` to prevent search-path hijacking. |
 | **A04 Insecure Design** | Limits enforced only in UI. | **SEC-3 fixed:** limits moved into DB constraints. Privacy promise ("only people here") now enforced by design, not UI. |

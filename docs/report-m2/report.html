@@ -103,7 +103,7 @@
 <tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (23 tests)</td><td class="pass">23 / 23 pass</td></tr>
 <tr><td>End-to-end UI</td><td>Maestro on iOS Simulator</td><td>full journey through the real UI (2 flows)</td><td class="pass">pass on 3 screen sizes</td></tr>
 </table>
-<p><b>Integration tests for the main user flows</b> (<code>app/__tests__/integration/flows.test.ts</code>) exercise the real system, not mocks: wrong password rejected; signed-out clients see nothing; a visible person appears to someone at the same venue and disappears when hidden; a one-sided request is invisible to its target; the return request creates exactly one match visible to both and to no outsider; clients cannot create matches directly; the match expires 6 h after creation; <b>a message is delivered to the other participant over Realtime</b>; a message cannot be sent under someone else's name; outsiders cannot read the chat; withdrawal dissolves the match and deletes the chat.</p>
+<p><b>Integration tests for the main user flows</b> (<code>app/__tests__/integration/flows.test.ts</code>) exercise the real system, not mocks: wrong password rejected; signed-out clients see nothing; a visible person appears to someone at the same venue and disappears when hidden; a one-sided request is invisible to its target; the return request creates exactly one match visible to both and to no outsider; clients cannot create matches directly; the match is set to expire 6 h after creation; <b>a message is delivered to the other participant over Realtime</b>; a message cannot be sent under someone else's name; outsiders cannot read the chat; withdrawal dissolves the match and deletes the chat.</p>
 
 <h3>3.2 Coverage report and target</h3>
 <table>
@@ -165,7 +165,7 @@
 <h3>4.4 OWASP Top 10 (2021) review</h3>
 <table>
 <tr><th>Category</th><th>Finding</th></tr>
-<tr><td><b>A01 Broken Access Control</b></td><td><b>Two real issues (SEC-1, SEC-2) — fixed.</b> RLS on every table, each rule asserted by an integration test.</td></tr>
+<tr><td><b>A01 Broken Access Control</b></td><td><b>Two real issues (SEC-1, SEC-2) — fixed.</b> RLS on every table; access rules asserted by integration tests. Hiding chats at expiry and the purge job need time to pass, so no automated test covers them yet.</td></tr>
 <tr><td>A02 Cryptographic Failures</td><td>Supabase Auth: bcrypt, TLS, JWT. No custom crypto.</td></tr>
 <tr><td>A03 Injection</td><td>PostgREST parameterises queries; no string-built SQL; DB functions pin <code>search_path = ''</code>.</td></tr>
 <tr><td><b>A04 Insecure Design</b></td><td><b>Limits existed only in the UI (SEC-3) — moved into DB constraints.</b></td></tr>

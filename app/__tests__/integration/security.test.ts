@@ -92,6 +92,15 @@ describe('SEC-2 (OWASP A01) unauthorized meet requests', () => {
     expect(error).not.toBeNull();
   });
 
+  it('a requester who is only heading to the venue cannot send a request', async () => {
+    await C.client.from('pins').upsert({ user_id: C.id, venue_id: venueId, status: 'heading', discoverable: true });
+    const { error } = await C.client
+      .from('meet_requests')
+      .insert({ requester_id: C.id, target_id: A.id, venue_id: venueId });
+    await C.client.from('pins').delete().eq('user_id', C.id);
+    expect(error).not.toBeNull();
+  });
+
   it('a legitimate request between two visible people at the venue still works', async () => {
     const { error } = await A.client
       .from('meet_requests')
@@ -110,6 +119,14 @@ describe('SEC-3 (OWASP A04/A03) server-side input validation', () => {
     const { error } = await A.client
       .from('profiles')
       .update({ interests: ['a', 'b', 'c', 'd', 'e', 'f'] })
+      .eq('id', A.id);
+    expect(error).not.toBeNull();
+  });
+
+  it('rejects interests over 200 characters in total', async () => {
+    const { error } = await A.client
+      .from('profiles')
+      .update({ interests: Array(5).fill('x'.repeat(41)) })
       .eq('id', A.id);
     expect(error).not.toBeNull();
   });
