@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## [2026-11-02] ChatScreen unit test timed out in CI (M2 review)
+- **Symptom:** "renders the header with initial, expiry time and history" failed with Jest's "Exceeded timeout of 5000 ms" in 2 of the 3 CI runs on the merged code (runs 41554325099 and 41554322438) and passed in the third.
+- **Cause:** It is the first render in the file and pays the React Native start-up cost; on a slow CI runner that alone can pass 5 s.
+- **Fix:** Default test timeout raised to 15 s (`testTimeout` in the Jest config).
+- **Lesson:** A test that passes on one run and fails on the next with the same code is a timing problem, not a logic one.
+
 ## [2026-11-02] Integration test run did not exit (M2 review)
 - **Symptom:** Both recorded runs in `docs/evidence/` end with Jest's "did not exit" warning; the CI job had no timeout.
 - **Cause:** An open handle after the tests finish. Not identified yet.

@@ -57,6 +57,7 @@
   },
   "private": true,
   "jest": {
+    "testTimeout": 15000,
     "projects": [
       {
         "displayName": "unit",
