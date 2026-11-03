@@ -1,0 +1,111 @@
+# BEFORE migration 20261102000010 (SEC-1 follow-up) — recorded 2026-11-03 02:43 UTC against the live Supabase project
+# Command: npm run test:integration
+
+Running one project: integration
+FAIL integration __tests__/integration/security.test.ts
+  SEC-1 (OWASP A01) presence enumeration
+    ✓ an outsider cannot list who is checked in at a venue (68 ms)
+    ✓ an outsider cannot read the profiles of people at a venue (82 ms)
+    ✓ someone checked in at a different venue cannot list this one (199 ms)
+    ✕ someone pinned at the venue but hidden cannot list it (304 ms)
+    ✕ someone only heading to the venue cannot list it (209 ms)
+    ✓ anyone signed in can still see anonymous counts for a venue (74 ms)
+  SEC-2 (OWASP A01) unauthorized meet requests
+    ✓ an outsider cannot send a meet request to someone at a venue (202 ms)
+    ✓ a request cannot target someone who is hidden (326 ms)
+    ✓ a requester who is only heading to the venue cannot send a request (307 ms)
+    ✓ a legitimate request between two visible people at the venue still works (198 ms)
+  SEC-3 (OWASP A04/A03) server-side input validation
+    ✓ rejects an oversized display name (62 ms)
+    ✓ rejects more than 5 interests (62 ms)
+    ✓ rejects interests over 200 characters in total (78 ms)
+    ✓ accepts a normal profile update (58 ms)
+
+  ● SEC-1 (OWASP A01) presence enumeration › someone pinned at the venue but hidden cannot list it
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 8
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "user_id": "83181e45-294a-4c49-b05d-c18ea5a98036",
+    +   },
+    +   Object {
+    +     "user_id": "3ac1d5a7-6e0d-4300-8595-c75711425cb4",
+    +   },
+    + ]
+
+      53 |     const { data: profiles } = await C.client.from('profiles').select('display_name').eq('id', A.id);
+      54 |     await C.client.from('pins').delete().eq('user_id', C.id);
+    > 55 |     expect(pins).toEqual([]);
+         |                  ^
+      56 |     expect(profiles).toEqual([]);
+      57 |   });
+      58 |
+
+      at Object.toEqual (__tests__/integration/security.test.ts:55:18)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+  ● SEC-1 (OWASP A01) presence enumeration › someone only heading to the venue cannot list it
+
+    expect(received).toEqual(expected) // deep equality
+
+    - Expected  - 1
+    + Received  + 8
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "user_id": "83181e45-294a-4c49-b05d-c18ea5a98036",
+    +   },
+    +   Object {
+    +     "user_id": "3ac1d5a7-6e0d-4300-8595-c75711425cb4",
+    +   },
+    + ]
+
+      61 |     const { data } = await C.client.from('pins').select('user_id').eq('venue_id', venueId).neq('user_id', C.id);
+      62 |     await C.client.from('pins').delete().eq('user_id', C.id);
+    > 63 |     expect(data).toEqual([]);
+         |                  ^
+      64 |   });
+      65 |
+      66 |   it('anyone signed in can still see anonymous counts for a venue', async () => {
+
+      at Object.toEqual (__tests__/integration/security.test.ts:63:18)
+      at asyncGeneratorStep (node_modules/@babel/runtime/helpers/asyncToGenerator.js:3:17)
+      at _next (node_modules/@babel/runtime/helpers/asyncToGenerator.js:17:9)
+
+PASS integration __tests__/integration/flows.test.ts (6.657 s)
+  Auth
+    ✓ rejects a wrong password (137 ms)
+    ✓ gives signed-out clients no access to user data (124 ms)
+  Presence (BC-04/05)
+    ✓ shows a visible person to someone checked in at the same venue (71 ms)
+    ✓ hides a person the moment they turn visibility off (182 ms)
+  Double opt-in matching (BC-06)
+    ✓ keeps a one-sided request invisible to its target (194 ms)
+    ✓ creates exactly one match, visible to both, when the request is returned (193 ms)
+    ✓ does not let an outsider see the match (71 ms)
+    ✓ refuses to let a client create matches directly (57 ms)
+  Chat (BC-07) and expiry (BC-10)
+    ✓ sets the match to expire 6 hours after it was made (63 ms)
+    ✓ delivers a message to the other participant in real time (2367 ms)
+    ✓ rejects a message sent under someone else's name (59 ms)
+    ✓ keeps the conversation private from outsiders (67 ms)
+    ✓ lets a matched person read the other profile after they leave the venue (254 ms)
+    ✓ does not let a participant change when the match expires (206 ms)
+    ✓ does not let a client run the purge job (86 ms)
+    ✓ dissolves the match and deletes the chat when either side withdraws (205 ms)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       2 failed, 28 passed, 30 total
+Snapshots:   0 total
+Time:        11.469 s, estimated 13 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.

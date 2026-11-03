@@ -13,6 +13,51 @@ Format:
 
 ---
 
+## [2026-11-02] ChatScreen unit test timed out in CI (M2 review)
+- **Symptom:** "renders the header with initial, expiry time and history" failed with Jest's "Exceeded timeout of 5000 ms" in 2 of the 3 CI runs on the merged code (runs 41554325099 and 41554322438) and passed in the third.
+- **Cause:** It is the first render in the file and pays the React Native start-up cost; on a slow CI runner that alone can pass 5 s.
+- **Fix:** Default test timeout raised to 15 s (`testTimeout` in the Jest config).
+- **Lesson:** A test that passes on one run and fails on the next with the same code is a timing problem, not a logic one.
+
+## [2026-11-02] Integration test run did not exit (M2 review)
+- **Symptom:** Both recorded runs in `docs/evidence/` end with Jest's "did not exit" warning; the CI job had no timeout.
+- **Cause:** An open handle after the tests finish. Not identified yet.
+- **Fix:** `--forceExit` on the integration scripts and a 10 minute CI timeout. This is a workaround, not a root-cause fix.
+- **Lesson:** A warning at the end of a passing log is still worth reading.
+
+## [2026-11-02] SEC-1 could be bypassed with a hidden pin (M2 review)
+- **Symptom:** A client could move a hidden pin from venue to venue and list who is visible at each one, found by reading the policies.
+- **Cause:** `viewer_venue()` accepted any pin, and users write their own pins.
+- **Fix:** Viewing now requires being checked in and visible (migration 20261102000010). A script can still cycle a visible pin until check-in is verified; recorded as a residual risk in `docs/SECURITY.md`.
+- **Lesson:** A rule based on data the client controls only limits what that client must reveal. Test the bypass, not just the outsider.
+
+## [2026-11-01] Keyboard covers the password field on iPhone 16e (M2 E2E) — open
+- **Symptom:** On the small iPhone 16e the keyboard hides the password field during sign-in.
+- **Cause:** Not investigated yet.
+- **Fix:** Not fixed. `returnKeyType="next"` is planned.
+
+## [2026-11-01] "List" and "Sign out" hidden under the iOS status bar (M2 E2E)
+- **Symptom:** The buttons rendered under the clock and battery and did not respond to taps.
+- **Cause:** Absolutely positioned children ignore the `SafeAreaView` inset.
+- **Fix:** Moved both buttons into a normal-flow top bar inside the safe area.
+- **Lesson:** Children of an absolutely positioned `SafeAreaView` must stay in normal flow to get the inset.
+
+## [2026-11-01] Three security vulnerabilities: SEC-1, SEC-2, SEC-3 (M2 integration suite)
+- **Symptom:** Security tests failed: any signed-in user could list visible people at every venue, send meet requests to anyone including hidden people, and store oversized names and interest lists.
+- **Cause:** The limits and the "people here" rule existed only in the UI, and the publishable key lets anyone call the API directly.
+- **Fix:** RLS policies, `venue_counts()` and check constraints (migration 20261101000009). Evidence in `docs/evidence/security-BEFORE.txt` and `security-AFTER.txt`.
+- **Lesson:** Any rule that exists only in the UI is not a control.
+
+## [2026-11-01] Previous account's profile could carry over after switching accounts (M2 lint)
+- **Symptom:** Flagged by ESLint `react-hooks/set-state-in-effect`: profile state was not tied to the signed-in user.
+- **Cause:** One profile state value survived a change of session.
+- **Fix:** Profile state is now keyed by user id.
+
+## [2026-11-01] Profile setup accepted 1 interest (M2 requirements review)
+- **Symptom:** The form allowed a single interest although BC-02 specifies 3–5.
+- **Cause:** The check only required at least 1.
+- **Fix:** `validateProfile` now enforces 3–5 interests and a 30 character name. The minimum is enforced in the app only, because new profiles start with no interests.
+
 ## [2026-09-30] Matched person's name vanished after they left the venue (M1 packaging)
 - **Symptom:** Map pill showed "Chat with " (empty name) for an active match.
 - **Cause:** Profile visibility rode only on "owner has a discoverable pin" — once a matched person left/went hidden, their profile became unreadable to their own match.

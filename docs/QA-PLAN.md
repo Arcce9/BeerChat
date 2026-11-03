@@ -20,7 +20,7 @@ Enforced by Jest `coverageThreshold` (the build fails below these):
 | `src/lib/logic.ts` (pure logic) | ≥ 95 % statements, ≥ 90 % branches, 100 % functions | **100 % / 94 % / 100 %** |
 | All of `src/` (global) | ≥ 80 % statements & lines, ≥ 70 % branches, ≥ 75 % functions | **84 % / 78 % / 83 %** |
 
-**Why these numbers.** Pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs would hide, so we demand near-total coverage. Screens are measured too, but the remaining uncovered lines are almost all Supabase realtime callbacks and network error branches — mocking those reproduces the mock, not the system. Those paths are covered where they actually matter, by the 23 integration tests against the real backend and the Maestro E2E flows, which coverage tools cannot count. A higher global number would mostly buy brittle mocks. `supabase.ts` (client config) and `theme.ts` (constants) are excluded as configuration.
+**Why these numbers.** Pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs would hide, so we demand near-total coverage. Screens are measured too, but the remaining uncovered lines are almost all Supabase realtime callbacks and network error branches — mocking those reproduces the mock, not the system. Those paths are covered where they actually matter, by the 30 integration tests against the real backend and the Maestro E2E flows, which coverage tools cannot count. A higher global number would mostly buy brittle mocks. `supabase.ts` (client config) and `theme.ts` (constants) are excluded as configuration.
 
 ## 3. QA checklist (applies to every pull request)
 
@@ -56,6 +56,6 @@ The Maestro E2E flow `01-signin-checkin-discover.yaml` was run on three iOS scre
 | Suite | Result |
 |---|---|
 | Unit + component (CI) | 54 / 54 pass, coverage 83.7 % statements |
-| Integration (live backend) | 23 / 23 pass |
+| Integration (live backend) | 30 / 30 pass |
 | E2E (Maestro) | 2 / 2 flows pass on iPhone 17; flow 01 passes on 16e and 17 Pro Max |
 | Lint | 0 errors, 2 warnings (`react-hooks/exhaustive-deps` on `buildMatch`, reviewed: intentional — the effects must not resubscribe when the helper's identity changes) |

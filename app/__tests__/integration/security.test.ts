@@ -47,6 +47,22 @@ describe('SEC-1 (OWASP A01) presence enumeration', () => {
     await C.client.from('pins').delete().eq('user_id', C.id);
   });
 
+  it('someone pinned at the venue but hidden cannot list it', async () => {
+    await checkIn(C, venueId, false);
+    const { data: pins } = await C.client.from('pins').select('user_id').eq('venue_id', venueId).neq('user_id', C.id);
+    const { data: profiles } = await C.client.from('profiles').select('display_name').eq('id', A.id);
+    await C.client.from('pins').delete().eq('user_id', C.id);
+    expect(pins).toEqual([]);
+    expect(profiles).toEqual([]);
+  });
+
+  it('someone only heading to the venue cannot list it', async () => {
+    await C.client.from('pins').upsert({ user_id: C.id, venue_id: venueId, status: 'heading', discoverable: true });
+    const { data } = await C.client.from('pins').select('user_id').eq('venue_id', venueId).neq('user_id', C.id);
+    await C.client.from('pins').delete().eq('user_id', C.id);
+    expect(data).toEqual([]);
+  });
+
   it('anyone signed in can still see anonymous counts for a venue', async () => {
     const { data, error } = await C.client.rpc('venue_counts', { target_venue: venueId });
     expect(error).toBeNull();
@@ -76,6 +92,15 @@ describe('SEC-2 (OWASP A01) unauthorized meet requests', () => {
     expect(error).not.toBeNull();
   });
 
+  it('a requester who is only heading to the venue cannot send a request', async () => {
+    await C.client.from('pins').upsert({ user_id: C.id, venue_id: venueId, status: 'heading', discoverable: true });
+    const { error } = await C.client
+      .from('meet_requests')
+      .insert({ requester_id: C.id, target_id: A.id, venue_id: venueId });
+    await C.client.from('pins').delete().eq('user_id', C.id);
+    expect(error).not.toBeNull();
+  });
+
   it('a legitimate request between two visible people at the venue still works', async () => {
     const { error } = await A.client
       .from('meet_requests')
@@ -94,6 +119,14 @@ describe('SEC-3 (OWASP A04/A03) server-side input validation', () => {
     const { error } = await A.client
       .from('profiles')
       .update({ interests: ['a', 'b', 'c', 'd', 'e', 'f'] })
+      .eq('id', A.id);
+    expect(error).not.toBeNull();
+  });
+
+  it('rejects interests over 200 characters in total', async () => {
+    const { error } = await A.client
+      .from('profiles')
+      .update({ interests: Array(5).fill('x'.repeat(41)) })
       .eq('id', A.id);
     expect(error).not.toBeNull();
   });

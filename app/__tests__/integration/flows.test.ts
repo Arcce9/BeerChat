@@ -159,6 +159,25 @@ describe('Chat (BC-07) and expiry (BC-10)', () => {
     expect(data).toEqual([]);
   });
 
+  it('lets a matched person read the other profile after they leave the venue', async () => {
+    await B.client.from('pins').delete().eq('user_id', B.id);
+    const { data } = await A.client.from('profiles').select('display_name').eq('id', B.id);
+    await checkIn(B, venueId, true);
+    expect(data).toEqual([{ display_name: 'IntBob' }]);
+  });
+
+  it('does not let a participant change when the match expires', async () => {
+    const { data: before } = await A.client.from('matches').select('expires_at').eq('id', matchId).single();
+    await A.client.from('matches').update({ expires_at: '2099-01-01T00:00:00Z' }).eq('id', matchId);
+    const { data: after } = await A.client.from('matches').select('expires_at').eq('id', matchId).single();
+    expect(after!.expires_at).toBe(before!.expires_at);
+  });
+
+  it('does not let a client run the purge job', async () => {
+    const { error } = await A.client.rpc('purge_expired_matches');
+    expect(error).not.toBeNull();
+  });
+
   it('dissolves the match and deletes the chat when either side withdraws', async () => {
     await B.client.from('meet_requests').delete().eq('requester_id', B.id);
     const { data: matches } = await A.client.from('matches').select('id').eq('id', matchId);
