@@ -44,7 +44,7 @@ Prerequisites, install, and demo-account credentials are in the root [README](..
 | M2-3 | In a terminal: `node scripts/seed-demo.mjs sam-says-yes`; then tap **Open to meet?** on Sam | "YOU BOTH SAID YES" with "This chat disappears at <time>" (6 h after now) | BC-06, BC-10 |
 | M2-4 | **Say hi**, send a message | Chat header shows "Houndstooth Sports Bar · disappears at <time>" | BC-07, BC-10 |
 | M2-5 | `npm test` and `npm run test:coverage` | 54 passed; coverage ≈ 84 % statements, thresholds met | unit/component tests |
-| M2-6 | `npm run test:integration` | 23 passed, including `SEC-1`, `SEC-2`, `SEC-3` | integration + security |
+| M2-6 | `npm run test:integration` | 30 passed, including `SEC-1`, `SEC-2`, `SEC-3` | integration + security |
 | M2-7 | *(optional)* `brew install maestro`, then `npm run e2e` with the simulator open | Both flows pass | end-to-end UI |
 | M2-8 | Reset afterwards: `node scripts/seed-demo.mjs clear` | Demo people leave the venue | — |
 

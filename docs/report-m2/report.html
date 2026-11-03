@@ -44,7 +44,7 @@
     <tr><td>Team</td><td>Arda Alici (aalici@crimson.ua.edu) · Margulan Baizhakyp (mbaizhakyp@crimson.ua.edu) · Karthik Gaur (kgaur@crimson.ua.edu)</td></tr>
     <tr><td>Repository</td><td><a href="https://github.com/Arcce9/BeerChat">github.com/Arcce9/BeerChat</a></td></tr>
     <tr><td>Git tag / release</td><td><code>milestone-2</code> · release <code>v0.2.0</code> (previous: <code>milestone-1</code> / <code>v0.1.0</code>)</td></tr>
-    <tr><td>Pull requests</td><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a> features + tests · <a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a> security · <a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a> E2E, CI, docs</td></tr>
+    <tr><td>Pull requests</td><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a> features + tests · <a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a> security · <a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a> E2E, CI, docs · <a href="https://github.com/Arcce9/BeerChat/pull/4">#4</a> review follow-up</td></tr>
     <tr><td>Submitted</td><td>November 2026</td></tr>
   </table>
 </div>
@@ -100,7 +100,7 @@
 <tr><td>Static</td><td>TypeScript strict, ESLint</td><td>whole app</td><td class="pass">0 type errors, 0 lint errors</td></tr>
 <tr><td>Unit</td><td>Jest</td><td><code>logic.ts</code>: ranking, expiry, validation, pin state machine (32 tests)</td><td class="pass">pass</td></tr>
 <tr><td>Component</td><td>Jest + React Native Testing Library (Supabase mocked)</td><td>MapHome, PeopleHere, MatchScreen, ChatScreen (22 tests)</td><td class="pass">pass</td></tr>
-<tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (23 tests)</td><td class="pass">23 / 23 pass</td></tr>
+<tr><td>Integration</td><td>Jest in Node against the <b>live</b> Supabase project, 3 real accounts</td><td>auth, RLS privacy rules, match/unmatch triggers, realtime delivery, expiry, security (30 tests)</td><td class="pass">30 / 30 pass</td></tr>
 <tr><td>End-to-end UI</td><td>Maestro on iOS Simulator</td><td>full journey through the real UI (2 flows)</td><td class="pass">pass on 3 screen sizes</td></tr>
 </table>
 <p><b>Integration tests for the main user flows</b> (<code>app/__tests__/integration/flows.test.ts</code>) exercise the real system, not mocks: wrong password rejected; signed-out clients see nothing; a visible person appears to someone at the same venue and disappears when hidden; a one-sided request is invisible to its target; the return request creates exactly one match visible to both and to no outsider; clients cannot create matches directly; the match is set to expire 6 h after creation; <b>a message is delivered to the other participant over Realtime</b>; a message cannot be sent under someone else's name; outsiders cannot read the chat; withdrawal dissolves the match and deletes the chat.</p>
@@ -115,7 +115,7 @@
 <tr><td><code>MapHome.tsx</code></td><td>76.6 %</td><td>71.0 %</td><td>70.8 %</td><td>79.1 %</td></tr>
 <tr><th>All files</th><th>83.7 %</th><th>77.9 %</th><th>83.0 %</th><th>84.9 %</th></tr>
 </table>
-<div class="callout"><b>Target (enforced — the build fails below it):</b> pure logic ≥ 95 % statements / 90 % branches / 100 % functions; whole app ≥ 80 % statements &amp; lines, 70 % branches, 75 % functions. <b>Justification:</b> pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs hide, so it gets near-total coverage. The uncovered remainder of the screens is almost entirely Supabase realtime callbacks and network-error branches; mocking those would only test the mock. Those paths are instead covered against the real backend by the 23 integration tests and the E2E flows, which line-coverage tools cannot count. HTML report committed at <code>docs/evidence/coverage/index.html</code> (regenerate with <code>npm run test:coverage</code>); CI also uploads it as an artifact on every run.</div>
+<div class="callout"><b>Target (enforced — the build fails below it):</b> pure logic ≥ 95 % statements / 90 % branches / 100 % functions; logic and components (<code>src/lib</code>, <code>src/components</code>; the sign-in and profile screen in <code>src/app</code> is not measured) ≥ 80 % statements &amp; lines, 70 % branches, 75 % functions. <b>Justification:</b> pure logic is cheap to test exhaustively and is where ranking/expiry/validation bugs hide, so it gets near-total coverage. The uncovered remainder of the screens is almost entirely Supabase realtime callbacks and network-error branches; mocking those would only test the mock. Those paths are instead covered against the real backend by the 30 integration tests and the E2E flows, which line-coverage tools cannot count. HTML report committed at <code>docs/evidence/coverage/index.html</code> (regenerate with <code>npm run test:coverage</code>); CI also uploads it as an artifact on every run.</div>
 
 <h3>3.3 Quality-assurance evidence</h3>
 <ul>
@@ -126,6 +126,8 @@
 <li>E2E run → "List" and "Sign out" rendered under the iOS status bar and swallowed taps → layout fix.</li>
 <li>E2E on the small iPhone 16e → keyboard covers the password field (documented; <code>returnKeyType="next"</code> planned).</li>
 <li>Integration suite → three security vulnerabilities (§4).</li>
+<li>Code review → SEC-1 could be bypassed with a hidden pin → viewers must be checked in and visible (migration <code>…000010</code>, §4).</li>
+<li>CI on the merged code → the first ChatScreen unit test hit Jest's 5 s timeout in 2 of 3 runs → default test timeout raised to 15 s.</li>
 <li>Requirements review → profile setup accepted 1 interest although BC-02 specifies 3–5 → fixed.</li>
 </ul></li>
 <li><b>CI:</b> GitHub Actions runs typecheck, lint and unit tests with coverage on every pull request (<a href="https://github.com/Arcce9/BeerChat/actions/runs/41370377012">first run: green, 1 m 29 s</a>); integration tests run on <code>main</code> and on demand.</li>
@@ -133,12 +135,13 @@
 
 <h2 class="pb">4 · Code review, cross-platform testing and security</h2>
 <h3>4.1 Peer code review</h3>
-<p>All Milestone 2 work went through three stacked pull requests, each with a description, test notes, reviewer-focus notes and the QA checklist, with both teammates requested as reviewers. A PR merges into <code>main</code> only after a teammate's approval, and <code>milestone-2</code> is tagged on the merged result, so each PR's review history is the review record:</p>
+<p>All Milestone 2 work went through pull requests, each with a description, test notes and the QA checklist. PRs #1–3 were merged before anyone had reviewed them; Karthik Gaur reviewed them afterwards on GitHub. PR #4 (Arda Alici's SEC-1 follow-up plus the final fixes) was reviewed before it merged, and <code>milestone-2</code> is tagged on the merged result, so the PR pages are the review record:</p>
 <table>
-<tr><th>PR</th><th>Scope</th><th>Reviewers</th></tr>
-<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a></td><td>BC-08, BC-10, logic extraction, unit/component tests, lint fix</td><td>Arda Alici (@Arcce9), Karthik Gaur (@Karthikgaur8)</td></tr>
-<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a></td><td>SEC-1…3 + integration suite (test-first: failing tests committed before the fix)</td><td>Arda Alici, Karthik Gaur</td></tr>
-<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a></td><td>E2E flows, status-bar fix, CI, QA/security/contributing docs</td><td>Arda Alici, Karthik Gaur</td></tr>
+<tr><th>PR</th><th>Scope</th><th>Review</th></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/1">#1</a></td><td>BC-08, BC-10, logic extraction, unit/component tests, lint fix</td><td>Karthik Gaur (@Karthikgaur8), after merge</td></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/2">#2</a></td><td>SEC-1…3 + integration suite (test-first: failing tests committed before the fix)</td><td>Karthik Gaur, after merge; Arda Alici (@Arcce9) found the SEC-1 bypass fixed in #4</td></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/3">#3</a></td><td>E2E flows, status-bar fix, CI, QA/security/contributing docs</td><td>Karthik Gaur, after merge</td></tr>
+<tr><td><a href="https://github.com/Arcce9/BeerChat/pull/4">#4</a></td><td>SEC-1 bypass fix and 7 more integration tests (Arda Alici), CI test-timeout fix, final report</td><td>Karthik Gaur, before merge (Arda's commits)</td></tr>
 </table>
 <p><b>Branching and commit conventions</b> (<code>docs/CONTRIBUTING.md</code>): short-lived <code>feature/</code>, <code>fix/</code>, <code>security/</code>, <code>docs/</code> branches off an always-runnable <code>main</code>; merge only via reviewed PR with green CI; Conventional Commits (<code>feat:</code>, <code>fix(security):</code>, <code>test:</code>, <code>ci:</code>…) referencing backlog/security ids; AI-assisted commits carry a <code>Co-Authored-By</code> trailer naming the model. <b>Changelog and releases:</b> <code>CHANGELOG.md</code>; tagged releases <code>v0.1.0</code> (Milestone 1) and <code>v0.2.0</code> (Milestone 2).</p>
 
@@ -201,7 +204,7 @@ npx expo start                 # press i → iOS Simulator (Expo Go installs aut
 npm run typecheck && npx expo lint
 npm test                       # 54 unit + component tests
 npm run test:coverage          # + coverage report and enforced thresholds
-npm run test:integration       # 23 tests against the live backend
+npm run test:integration       # 30 tests against the live backend
 npm run e2e                    # optional: Maestro UI flows (brew install maestro)</pre>
 <p><b>Environment:</b> <code>app/.env</code> (Supabase URL + publishable key, safe to ship by design — all data protected by RLS) and <code>app/.env.test</code> (integration-test account password) are committed, so no configuration is needed; <code>app/.env.example</code> documents the variables. <b>Migrations:</b> ten ordered files in <code>supabase/migrations/</code>, already applied to the hosted database (<code>supabase db push</code> for a fresh project); M2 adds <code>…000008_chat_expiry</code>, <code>…000009_security_hardening</code> and <code>…000010_viewer_must_be_visible</code>. <b>Demo accounts:</b> <code>ta.demo1@beerchat.dev</code> / <code>BeerChat-M1-demo1</code> (Alex — sign in as this one); demo2–4 (Sam, Priya, Tom) follow the same pattern.</p>
 <table>
@@ -235,7 +238,7 @@ npm run e2e                    # optional: Maestro UI flows (brew install maestr
 <tr><th>Member</th><th>Milestone 2 contribution</th></tr>
 <tr><td><b>Margulan Baizhakyp</b></td><td>Built the Milestone 2 work using a disclosed AI-assisted workflow (Claude Code; commits carry a <code>Co-Authored-By</code> trailer): BC-08 ranking, BC-10 chat expiry, the unit/component/integration/E2E test suites and CI, the SEC-1…3 security fixes with before/after evidence, the QA plan, security, contributing and changelog documents, and this report.</td></tr>
 <tr><td><b>Arda Alici</b></td><td>Worked with Margulan Baizhakyp on the E2E flows, CI, documentation and report, and merged PRs #1–3 into <code>main</code>. With AI assistance (Claude Code), reviewed the Milestone 2 code, found that SEC-1 could be bypassed with a hidden pin, and wrote the fix (migration <code>…000010</code>) with regression tests, added a CI timeout and forced exit for the integration tests, added five more access-rule tests, and completed the Milestone 2 bug log.</td></tr>
-<tr><td><b>Karthik Gaur</b></td><td><span class="todo">[To be written by Karthik: one or two sentences on his own Milestone 2 contribution.]</span></td></tr>
+<tr><td><b>Karthik Gaur</b></td><td>With AI assistance (Claude Code), reviewed PRs #1–3 on GitHub, found and fixed a unit test that was failing CI on the merged code, reviewed and merged Arda's SEC-1 follow-up (PR #4), tagged <code>milestone-2</code> and published release <code>v0.2.0</code>, and finalized this report and the README.</td></tr>
 </table>
 
 </body>

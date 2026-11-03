@@ -2,7 +2,7 @@
 
 > Real-time, location-aware social presence app for spontaneous in-person meetups at local venues.
 
-**Milestone 2 status: tested, hardened, expanded.** The core loop (sign up → profile → pin a venue → check in → discover people → mutual "open to meet" → 1-on-1 chat) now also ranks people by shared interests (BC-08) and expires chats after 6 hours (BC-10). It ships with 54 unit/component tests, 23 integration tests against the live backend, 2 end-to-end UI flows, CI on every pull request, and three security fixes (see [docs/SECURITY.md](docs/SECURITY.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
+**Milestone 2 status: tested, hardened, expanded.** The core loop (sign up → profile → pin a venue → check in → discover people → mutual "open to meet" → 1-on-1 chat) now also ranks people by shared interests (BC-08) and expires chats after 6 hours (BC-10). It ships with 54 unit/component tests, 30 integration tests against the live backend, 2 end-to-end UI flows, CI on every pull request, and three security fixes (see [docs/SECURITY.md](docs/SECURITY.md)). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ---
 
@@ -89,7 +89,7 @@ npm run typecheck          # TypeScript strict
 npx expo lint              # ESLint
 npm test                   # 54 unit + component tests
 npm run test:coverage      # same, with coverage report (app/coverage/index.html) and enforced thresholds
-npm run test:integration   # 23 tests against the live Supabase project (needs network)
+npm run test:integration   # 30 tests against the live Supabase project (needs network)
 npm run e2e                # Maestro UI flows (needs `brew install maestro`, Expo running, `npm run seed:demo`)
 ```
 CI runs typecheck, lint and unit tests with coverage on every pull request ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
@@ -133,7 +133,7 @@ Short version — the full script with expected results is in [docs/VERIFICATION
 ## Team & Milestone 2 Contributions
 - **Margulan Baizhakyp** (mbaizhakyp@crimson.ua.edu): Built the Milestone 2 work using a disclosed AI-assisted workflow (Claude Code; commits carry a `Co-Authored-By` trailer): BC-08 ranking, BC-10 chat expiry, the unit/component/integration/E2E test suites and CI, the SEC-1…3 security fixes with before/after evidence, the QA plan, security, contributing and changelog documents, and the Milestone 2 report.
 - **Arda Alici** (aalici@crimson.ua.edu): Worked with Margulan Baizhakyp on the E2E flows, CI, documentation and report, and merged PRs #1–3 into `main`. With AI assistance (Claude Code), reviewed the Milestone 2 code, found that SEC-1 could be bypassed with a hidden pin, and wrote the fix (migration `…000010`) with regression tests, added a CI timeout and forced exit for the integration tests, added five more access-rule tests, and completed the Milestone 2 bug log.
-- **Karthik Gaur** (kgaur@crimson.ua.edu): _To be written by Karthik — one or two sentences on his own Milestone 2 contribution._
+- **Karthik Gaur** (kgaur@crimson.ua.edu): With AI assistance (Claude Code), reviewed PRs #1–3 on GitHub, found and fixed a unit test that was failing CI on the merged code, reviewed and merged Arda's SEC-1 follow-up (PR #4), tagged `milestone-2` and published release `v0.2.0`, and finalized the Milestone 2 report and this README.
 
 Per-milestone contributions are tracked with git tags (`git shortlog -sn milestone-1..milestone-2`).
 

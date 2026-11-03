@@ -8,7 +8,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com/); ve
 - **BC-08 interest-ranked people list:** people at your venue are sorted by shared interests ("2 in common"), with shared tags highlighted.
 - **BC-10 ephemeral chat:** matches (and their chats) expire 6 hours after matching; expiry time shown on the match and chat screens; expired data is hidden by RLS immediately and purged every 15 min by a pg_cron job.
 - Anonymous per-venue counts via the `venue_counts()` database function.
-- Test suites: 54 unit/component tests (Jest + React Native Testing Library), 23 integration tests against the live backend, 2 Maestro end-to-end UI flows; coverage thresholds.
+- Test suites: 54 unit/component tests (Jest + React Native Testing Library), 30 integration tests against the live backend, 2 Maestro end-to-end UI flows; coverage thresholds.
 - CI (GitHub Actions): typecheck, lint, unit tests + coverage on every PR; integration tests on `main`.
 - `scripts/seed-demo.mjs` demo data; accessibility labels / test IDs on inputs.
 - Docs: QA plan, security (threat model, OWASP review, evidence), contributing guide, this changelog.
@@ -22,6 +22,7 @@ All notable changes. Format: [Keep a Changelog](https://keepachangelog.com/); ve
 - "List" and "Sign out" sat under the iOS status bar and swallowed taps.
 - A previous account's profile could briefly carry over after switching accounts.
 - Profile setup now enforces the specified 3–5 interests (was 1–5) and a 30-character name.
+- A ChatScreen unit test intermittently hit Jest's 5 s timeout in CI; the default test timeout is now 15 s.
 
 ### Changed
 - Expo SDK patch updates (React Native 0.86.2 → 0.86.3).
