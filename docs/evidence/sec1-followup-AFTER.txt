@@ -1,0 +1,53 @@
+# AFTER migration 20261102000010 (SEC-1 follow-up) — recorded 2026-11-03 02:44 UTC against the live Supabase project
+# Command: npm run test:integration
+
+Running one project: integration
+PASS integration __tests__/integration/security.test.ts (5.181 s)
+  SEC-1 (OWASP A01) presence enumeration
+    ✓ an outsider cannot list who is checked in at a venue (88 ms)
+    ✓ an outsider cannot read the profiles of people at a venue (68 ms)
+    ✓ someone checked in at a different venue cannot list this one (208 ms)
+    ✓ someone pinned at the venue but hidden cannot list it (379 ms)
+    ✓ someone only heading to the venue cannot list it (201 ms)
+    ✓ anyone signed in can still see anonymous counts for a venue (70 ms)
+  SEC-2 (OWASP A01) unauthorized meet requests
+    ✓ an outsider cannot send a meet request to someone at a venue (210 ms)
+    ✓ a request cannot target someone who is hidden (383 ms)
+    ✓ a requester who is only heading to the venue cannot send a request (370 ms)
+    ✓ a legitimate request between two visible people at the venue still works (204 ms)
+  SEC-3 (OWASP A04/A03) server-side input validation
+    ✓ rejects an oversized display name (88 ms)
+    ✓ rejects more than 5 interests (77 ms)
+    ✓ rejects interests over 200 characters in total (66 ms)
+    ✓ accepts a normal profile update (89 ms)
+
+PASS integration __tests__/integration/flows.test.ts (7.418 s)
+  Auth
+    ✓ rejects a wrong password (136 ms)
+    ✓ gives signed-out clients no access to user data (121 ms)
+  Presence (BC-04/05)
+    ✓ shows a visible person to someone checked in at the same venue (59 ms)
+    ✓ hides a person the moment they turn visibility off (194 ms)
+  Double opt-in matching (BC-06)
+    ✓ keeps a one-sided request invisible to its target (182 ms)
+    ✓ creates exactly one match, visible to both, when the request is returned (213 ms)
+    ✓ does not let an outsider see the match (155 ms)
+    ✓ refuses to let a client create matches directly (176 ms)
+  Chat (BC-07) and expiry (BC-10)
+    ✓ sets the match to expire 6 hours after it was made (86 ms)
+    ✓ delivers a message to the other participant in real time (2491 ms)
+    ✓ rejects a message sent under someone else's name (74 ms)
+    ✓ keeps the conversation private from outsiders (86 ms)
+    ✓ lets a matched person read the other profile after they leave the venue (275 ms)
+    ✓ does not let a participant change when the match expires (216 ms)
+    ✓ does not let a client run the purge job (61 ms)
+    ✓ dissolves the match and deletes the chat when either side withdraws (236 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       30 passed, 30 total
+Snapshots:   0 total
+Time:        12.634 s
+Ran all test suites.
+Jest did not exit one second after the test run has completed.
+
+'This usually means that there are asynchronous operations that weren't stopped in your tests. Consider running Jest with `--detectOpenHandles` to troubleshoot this issue.
